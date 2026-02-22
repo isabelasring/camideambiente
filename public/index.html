@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geotrends - Analytics Dashboard | Camilo</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Animación de fondo Luma AI -->
+    <div class="background-animation">
+        <iframe 
+            src="https://lumalabs.ai/embed/e36f0cf1-66b8-4613-8bd0-0f0c545b36bd?mode=sparkles&background=%23ffffff&color=%23000000&showTitle=true&loadBg=true&logoPosition=bottom-left&infoPosition=bottom-right&cinematicVideo=undefined&showMenu=false"
+            frameborder="0"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="dashboard-container">
+        <!-- Barra de navegación superior -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <h2 class="logo">Geotrends</h2>
+                <div class="nav-links">
+                    <a href="#" class="nav-link active">camideambiente</a>
+                    <a href="#" class="nav-link">Analytics</a>
+                    <a href="#" class="nav-link">Reportes</a>
+                </div>
+            </div>
+            <div class="nav-center">
+                <div class="search-bar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" placeholder="Buscar...">
+                </div>
+            </div>
+            <div class="nav-right">
+                <button class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </button>
+                <button class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </button>
+                <div class="user-profile">
+                    <div class="avatar">C</div>
+                    <div class="user-info">
+                        <span class="user-name">Camilo</span>
+                        <span class="user-role">Político</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1>Dashboard de Instagram</h1>
+                <div class="header-buttons">
+                    <button class="btn active">followers</button>
+                    <button class="btn">profiles</button>
+                    <button class="btn">posts</button>
+                    <button class="btn">images</button>
+                </div>
+            </div>
+
+            <!-- Tarjetas de métricas -->
+            <div class="metrics-grid">
+                <div class="metric-card glass">
+                    <div class="metric-header">
+                        <span class="metric-label">Total Seguidores</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-value">125.4K</div>
+                    <div class="metric-change positive">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                        +12.5%
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-header">
+                        <span class="metric-label">Posts con Más Engagement</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="metric-value">23</div>
+                    <div class="metric-change positive">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                        +5.2%
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-header">
+                        <span class="metric-label">Reels Recientes</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                        </svg>
+                    </div>
+                    <div class="metric-value">50</div>
+                    <div class="metric-change positive">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                        +8.1%
+                    </div>
+                </div>
+
+                <div class="metric-card glass">
+                    <div class="metric-header">
+                        <span class="metric-label">Total Comentarios</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-value">45.2K</div>
+                    <div class="metric-change positive">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                        +15.3%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila de gráficas principales -->
+            <div class="charts-row">
+                <!-- Gráfica de barras - Engagement por mes -->
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <h3>Engagement por Mes</h3>
+                        <button class="chart-menu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <canvas id="engagementChart"></canvas>
+                </div>
+
+                <!-- Gráfica de dona - Distribución de Seguidores -->
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <h3>Distribución de Seguidores</h3>
+                        <button class="chart-menu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <canvas id="followersChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Segunda fila de gráficas -->
+            <div class="charts-row">
+                <!-- Gráfica de barras - Top Reels -->
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <h3>Top 10 Reels por Visualizaciones</h3>
+                        <button class="chart-menu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <canvas id="reelsChart"></canvas>
+                </div>
+
+                <!-- Lista de Posts Populares -->
+                <div class="list-card glass">
+                    <div class="list-header">
+                        <h3>Posts Más Comentados</h3>
+                        <button class="btn-small">Ver todos</button>
+                    </div>
+                    <div class="posts-list" id="postsList">
+                        <!-- Los posts se cargarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila inferior con más información -->
+            <div class="bottom-row">
+                <!-- Lista de Seguidores Recientes -->
+                <div class="list-card glass">
+                    <div class="list-header">
+                        <h3>Seguidores Recientes</h3>
+                        <button class="btn-small">Ver todos</button>
+                    </div>
+                    <div class="followers-list" id="followersList">
+                        <!-- Los seguidores se cargarán dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Información del Perfil -->
+                <div class="profile-card glass">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large">C</div>
+                        <div class="profile-info">
+                            <h3>Camilo</h3>
+                            <div class="profile-rating">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                <span>4.8 (2.5K reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Instagram</span>
+                            <span class="detail-value">@camilo</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Categoría</span>
+                            <span class="detail-value">Político</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Última actualización</span>
+                            <span class="detail-value">Hace 2 horas</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Engagement</span>
+                            <span class="detail-value highlight">+18.5%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Iconos flotantes -->
+    <div class="floating-icons">
+        <button class="floating-icon" title="Pantalla completa">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+        </button>
+        <button class="floating-icon" title="Buscar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </button>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
