@@ -324,14 +324,15 @@ body {
 /* Gráficas */
 .charts-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .chart-card {
     padding: 1.5rem;
-    min-height: 350px;
+    min-height: 400px;
+    max-height: 500px;
 }
 
 .chart-header {
