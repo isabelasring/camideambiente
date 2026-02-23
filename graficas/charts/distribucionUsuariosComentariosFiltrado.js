@@ -1,17 +1,27 @@
 /**
- * Gráfico Plotly filtrado: Usuarios que comentaron - solo rango 500-5000 seguidores
- * - Y: seguidores, X: seguidos (escala log)
- * - size: postsCount
- * - Solo muestra usuarios con 500 <= seguidores <= 5000
+ * Gráfico Plotly filtrado: Usuarios que comentaron - solo rango 200-4000 seguidores
+ * Fuente: profileUsersComments.json
+ * Filtros: privada/pública, personal/business, verificada
  */
 (function() {
   'use strict';
 
-  const API_URL = '/api/metrics/perfiles-comentarios?min_followers=500&max_followers=5000';
-  const MIN_FOLLOWERS = 500;
-  const MAX_FOLLOWERS = 5000;
+  const BASE_URL = '/api/metrics/perfiles-comentarios';
+  const MIN_FOLLOWERS = 200;
+  const MAX_FOLLOWERS = 4000;
   const CONTAINER_ID = 'chartDistribucionUsuariosComentariosFiltrado';
   const STATS_ID = 'chartUsuariosComentariosFiltradoStats';
+
+  function buildUrl() {
+    const params = new URLSearchParams({ min_followers: '200', max_followers: '4000' });
+    const priv = document.getElementById('filterPrivateProfiles');
+    const bus = document.getElementById('filterBusinessProfiles');
+    const ver = document.getElementById('filterVerifiedProfiles');
+    if (priv && priv.value) params.set('private', priv.value);
+    if (bus && bus.value) params.set('is_business', bus.value);
+    if (ver && ver.value) params.set('verified', ver.value);
+    return BASE_URL + '?' + params.toString();
+  }
 
   const SEGMENTO_COLORS = {
     regular: '#94a3b8',
@@ -21,23 +31,37 @@
     bajo_engagement: '#4ade80'
   };
 
-  function init() {
+  function load() {
     const container = document.getElementById(CONTAINER_ID);
+    const stats = document.getElementById(STATS_ID);
     if (!container) return;
 
-    fetch(API_URL)
+    if (stats) stats.textContent = 'Cargando...';
+    fetch(buildUrl())
       .then(r => {
         if (!r.ok) throw new Error(r.status);
         return r.json();
       })
       .then((body) => {
         const data = body && body.data;
-        const total = body && body.total;
+        const totalEnRango = body && body.totalEnRango;
         const totalFiltrado = body && body.totalFiltrado;
+        const statsBase = body && body.statsBase;
+
+        if (statsBase) {
+          const fmt = n => (n ?? 0).toLocaleString('es-CO');
+          const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
+          set('statBaseProfiles', statsBase.base);
+          set('statPrivadasProfiles', statsBase.privadas);
+          set('statPublicasProfiles', statsBase.publicas);
+          set('statPersonalProfiles', statsBase.personal);
+          set('statBusinessProfiles', statsBase.business);
+          set('statVerificadasProfiles', statsBase.verificadas);
+        }
 
         if (!data || !data.length) {
           const stats = document.getElementById(STATS_ID);
-          if (stats) stats.textContent = 'No hay usuarios en el rango 500-5000 seguidores';
+          if (stats) stats.textContent = 'No hay usuarios en el rango 200-4000 seguidores';
           return;
         }
 
@@ -48,7 +72,7 @@
 
         if (!dataFiltrada.length) {
           const stats = document.getElementById(STATS_ID);
-          if (stats) stats.textContent = 'No hay usuarios en el rango 500-5000 seguidores';
+          if (stats) stats.textContent = 'No hay usuarios en el rango 200-4000 seguidores';
           return;
         }
 
@@ -78,7 +102,7 @@
 
         const layout = {
           title: {
-            text: 'Filtrado: 500-5000 seguidores (tamaño = posts)',
+            text: 'Filtrado: 200-4000 seguidores (tamaño = posts)',
             font: { size: 14, color: '#1f2937' }
           },
           xaxis: {
@@ -114,15 +138,24 @@
 
         Plotly.newPlot(CONTAINER_ID, traces, layout, { responsive: true, scrollZoom: true, displayModeBar: true, useResizeHandler: true });
 
-        const stats = document.getElementById(STATS_ID);
-        if (stats) {
-          const n = dataFiltrada.length.toLocaleString();
-          const tot = (total ?? 0).toLocaleString();
-          stats.textContent = `Usuarios en el rango: ${n} de ${tot} totales (500-5000 seguidores)`;
-          stats.style.cssText = 'margin-top:1rem;color:rgba(255,255,255,0.7);font-size:0.9rem;';
+        const statsEl = document.getElementById(STATS_ID);
+        if (statsEl) {
+          const n = (totalFiltrado ?? dataFiltrada.length).toLocaleString();
+          const tot = (totalEnRango ?? 0).toLocaleString();
+          statsEl.textContent = `Usuarios que cumplen el filtro: ${n} de ${tot} (rango 200-4000 seguidores)`;
+          statsEl.style.cssText = 'margin-top:1rem;color:rgba(255,255,255,0.7);font-size:0.9rem;';
         }
       })
       .catch(err => console.error('Error cargando usuarios comentarios filtrado:', err));
+  }
+
+  function init() {
+    const loadOnChange = () => load();
+    ['filterPrivateProfiles', 'filterBusinessProfiles', 'filterVerifiedProfiles'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', loadOnChange);
+    });
+    load();
   }
 
   if (document.readyState === 'loading') {
@@ -131,5 +164,5 @@
     init();
   }
 
-  window.ChartDistribucionUsuariosComentariosFiltrado = { init };
+  window.ChartDistribucionUsuariosComentariosFiltrado = { init, load };
 })();

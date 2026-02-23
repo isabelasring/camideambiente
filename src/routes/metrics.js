@@ -196,6 +196,7 @@ router.get('/perfiles-comentarios', (req, res) => {
     }
     let raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     if (!Array.isArray(raw)) raw = [];
+    const toBool = (v) => v === true || v === 'true' || v === 'True' || v === '1';
     const data = raw
       .filter(p => p.followersCount != null && p.followsCount != null)
       .map(p => {
@@ -211,11 +212,17 @@ router.get('/perfiles-comentarios', (req, res) => {
           followsCount: follows,
           username: p.username || '',
           fullName: (p.fullName || '').trim() || p.username || '—',
-          segmento: calcularSegmento(followers, posts)
+          segmento: calcularSegmento(followers, posts),
+          private: toBool(p.private),
+          isBusinessAccount: toBool(p.isBusinessAccount),
+          verified: toBool(p.verified)
         };
       });
     const minFollowers = parseInt(req.query.min_followers, 10);
     const maxFollowers = parseInt(req.query.max_followers, 10);
+    const filterPrivate = req.query.private;
+    const filterBusiness = req.query.is_business;
+    const filterVerified = req.query.verified;
     let filtered = data;
     if (!isNaN(minFollowers) || !isNaN(maxFollowers)) {
       filtered = data.filter(p => {
@@ -224,9 +231,36 @@ router.get('/perfiles-comentarios', (req, res) => {
         return true;
       });
     }
+    const totalEnRango = filtered.length;
+    const statsBase = {
+      base: totalEnRango,
+      privadas: filtered.filter(p => p.private).length,
+      publicas: filtered.filter(p => !p.private).length,
+      personal: filtered.filter(p => !p.isBusinessAccount).length,
+      business: filtered.filter(p => p.isBusinessAccount).length,
+      verificadas: filtered.filter(p => p.verified).length
+    };
+    if (filterPrivate === 'true' || filterPrivate === 'false') {
+      const wantPrivate = filterPrivate === 'true';
+      filtered = filtered.filter(p => p.private === wantPrivate);
+    }
+    if (filterBusiness === 'true' || filterBusiness === 'false') {
+      const wantBusiness = filterBusiness === 'true';
+      filtered = filtered.filter(p => p.isBusinessAccount === wantBusiness);
+    }
+    if (filterVerified === 'true' || filterVerified === 'false') {
+      const wantVerified = filterVerified === 'true';
+      filtered = filtered.filter(p => p.verified === wantVerified);
+    }
     const step = Math.max(1, Math.floor(filtered.length / 1000));
     const sampled = filtered.filter((_, i) => i % step === 0).slice(0, 1000);
-    return res.json({ data: sampled, total: data.length, totalFiltrado: filtered.length });
+    return res.json({
+      data: sampled,
+      total: data.length,
+      totalEnRango,
+      totalFiltrado: filtered.length,
+      statsBase
+    });
   } catch (err) {
     console.error('Error perfiles-comentarios:', err);
     return res.status(500).json({ error: err.message });
