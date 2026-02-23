@@ -10,6 +10,34 @@
   const BASE_URL = '/api/metrics/distribucion-comentadores-red';
   const CONTAINER_ID = 'chartDistribucionComentadoresRed';
   const STATS_ID = 'chartComentadoresRedStats';
+  const DOWNLOADS_ID = 'chartComentadoresRedDownloads';
+
+  function toCSVRed(arr) {
+    const cols = ['username', 'fullName', 'followersCount', 'followsCount', 'commentsCount', 'sigueCamilo'];
+    const esc = v => {
+      const s = String(v ?? '').replace(/"/g, '""');
+      return /[,"\n\r]/.test(s) ? '"' + s + '"' : s;
+    };
+    const header = cols.join(',');
+    const rows = arr.map(d => [
+      esc(d.username),
+      esc(d.fullName),
+      d.followersCount ?? '',
+      d.followsCount ?? '',
+      d.commentsCount ?? '',
+      d.followsCamilo ? 'Sí' : 'No'
+    ].join(','));
+    return '\uFEFF' + header + '\r\n' + rows.join('\r\n');
+  }
+
+  function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   function buildUrl() {
     const params = new URLSearchParams();
@@ -53,8 +81,16 @@
 
         if (!data || !data.length) {
           if (statsEl) statsEl.textContent = 'Ningún usuario coincide con el filtro.';
+          const downloadsEl = document.getElementById(DOWNLOADS_ID);
+          if (downloadsEl) downloadsEl.style.display = 'none';
           Plotly.purge(CONTAINER_ID);
           return;
+        }
+
+        const downloadsEl = document.getElementById(DOWNLOADS_ID);
+        if (downloadsEl) {
+          downloadsEl.style.display = 'flex';
+          downloadsEl._comentadoresData = data;
         }
 
         const sigue = data.filter(d => d.followsCamilo);
@@ -99,7 +135,7 @@
           height: 480,
           autosize: true,
           showlegend: true,
-          legend: { title: { text: 'En la red', font: { color: '#1f2937' } }, font: { color: '#374151' }, yanchor: 'top', y: 1, xanchor: 'left', x: 1.02 },
+          legend: { title: { text: 'En la red', font: { color: '#1f2937' } }, font: { color: '#374151' }, yanchor: 'top', y: 1, xanchor: 'left', x: 1.02, itemsizing: 'constant', itemwidth: 40 },
           margin: { t: 50, r: 150, b: 90, l: 70 }
         };
 
@@ -121,6 +157,19 @@
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', load);
     });
+    const downloadsEl = document.getElementById(DOWNLOADS_ID);
+    if (downloadsEl) {
+      downloadsEl.querySelector('.btn-download-followers-red')?.addEventListener('click', () => {
+        const data = downloadsEl._comentadoresData || [];
+        const filtered = data.filter(d => d.followsCamilo);
+        downloadCSV(toCSVRed(filtered), 'comentadores_followers.csv');
+      });
+      downloadsEl.querySelector('.btn-download-no-followers-red')?.addEventListener('click', () => {
+        const data = downloadsEl._comentadoresData || [];
+        const filtered = data.filter(d => !d.followsCamilo);
+        downloadCSV(toCSVRed(filtered), 'comentadores_no_followers.csv');
+      });
+    }
     load();
   }
 

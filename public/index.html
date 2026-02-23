@@ -21,37 +21,28 @@
 
     <!-- Contenedor principal -->
     <div class="dashboard-container">
-        <!-- Barra de navegación superior -->
-        <nav class="top-nav">
-            <div class="nav-left">
-                <h2 class="logo">Geotrends</h2>
-                <div class="nav-links">
-                    <a href="#" class="nav-link active">camideambiente</a>
-                    <a href="#" class="nav-link">Analytics</a>
-                    <a href="#" class="nav-link">Reportes</a>
-                </div>
+        <!-- Sidebar lateral izquierdo -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo">Geotrends</h2>
             </div>
-            <div class="nav-center">
-                <div class="search-bar">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" placeholder="Buscar...">
+            <nav class="sidebar-nav">
+                <div class="sidebar-item sidebar-item-expandable expanded" data-expand="camideambiente">
+                    <button type="button" class="sidebar-item-main">
+                        <span class="sidebar-item-text">camideambiente</span>
+                        <svg class="sidebar-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="sidebar-subitems" id="sidebarCamideambiente">
+                        <button type="button" class="sidebar-subitem active" data-tab="followers">followers</button>
+                        <button type="button" class="sidebar-subitem" data-tab="profiles">profiles</button>
+                        <button type="button" class="sidebar-subitem" data-tab="posts">posts</button>
+                        <button type="button" class="sidebar-subitem" data-tab="images">images</button>
+                    </div>
                 </div>
-            </div>
-            <div class="nav-right">
-                <button class="icon-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                    </svg>
-                </button>
-                <button class="icon-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                </button>
+            </nav>
+            <div class="sidebar-footer">
                 <div class="user-profile">
                     <div class="avatar">C</div>
                     <div class="user-info">
@@ -60,20 +51,10 @@
                     </div>
                 </div>
             </div>
-        </nav>
+        </aside>
 
         <!-- Contenido principal -->
         <main class="main-content">
-            <div class="content-header">
-                <h1>Dashboard de Instagram</h1>
-                <div class="header-buttons">
-                    <button class="btn active" data-tab="followers">followers</button>
-                    <button class="btn" data-tab="profiles">profiles</button>
-                    <button class="btn" data-tab="posts">posts</button>
-                    <button class="btn" data-tab="images">images</button>
-                </div>
-            </div>
-
             <!-- Vista followers (por defecto) -->
             <div class="dashboard-view" data-view="followers">
             <!-- Perfil Camilo + Tarjetas de métricas lado a lado -->
@@ -266,8 +247,8 @@
             <div class="top-profiles-section glass">
                 <h3 class="top-profiles-title">Top profiles</h3>
                 <p class="top-profiles-subtitle">Top 6 perfiles con más seguidores en el rango (500-5000 seguidores, >500 seguidos):</p>
-                <div class="top-profiles-grid" id="topProfilesGrid">
-                    <!-- Se cargan dinámicamente -->
+                <div class="chart-canvas-wrap top-profiles-chart-wrap">
+                    <div id="chartTopProfilesPotenciales"></div>
                 </div>
                 <p class="top-profiles-desc">Perfiles con mayor alcance potencial en la campaña. Los conteos de seguidores y seguidos ayudan a entender la influencia y conectividad de cada perfil en la red.</p>
             </div>
@@ -465,6 +446,10 @@
                             <div id="chartDistribucionComentadoresRed"></div>
                         </div>
                         <div class="chart-filter-stats" id="chartComentadoresRedStats"></div>
+                        <div class="chart-download-buttons" id="chartComentadoresRedDownloads" style="display:none;">
+                            <button type="button" class="btn btn-download-followers-red">Followers CSV</button>
+                            <button type="button" class="btn btn-download-no-followers-red">No followers CSV</button>
+                        </div>
                     </div>
                 </div>
 
@@ -472,8 +457,8 @@
                 <div class="top-profiles-section glass" style="margin-top: 2rem;">
                     <h3 class="top-profiles-title">Top profiles (usuarios que comentaron)</h3>
                     <p class="top-profiles-subtitle">Top 6 cuentas con más seguidores en el rango 200-4000 (usuarios que comentaron en posts virales):</p>
-                    <div class="top-profiles-grid" id="topProfilesComentadoresGrid">
-                        <!-- Se cargan dinámicamente -->
+                    <div class="chart-canvas-wrap top-profiles-chart-wrap">
+                        <div id="chartTopProfilesComentadores"></div>
                     </div>
                     <p class="top-profiles-desc">Perfiles con mayor alcance entre quienes comentan en publicaciones populares.</p>
                 </div>

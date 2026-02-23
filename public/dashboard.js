@@ -56,10 +56,17 @@ if (engagementCtx) {
     });
 }
 
-// Tabs: followers / profiles / posts / images
+// Tabs: followers / profiles / posts / images (desde sidebar)
 document.addEventListener('DOMContentLoaded', () => {
-    const tabBtns = document.querySelectorAll('.header-buttons .btn[data-tab]');
+    const tabBtns = document.querySelectorAll('.sidebar-subitem[data-tab]');
     const views = document.querySelectorAll('.dashboard-view[data-view]');
+
+    document.querySelectorAll('.sidebar-item-expandable .sidebar-item-main').forEach(mainBtn => {
+        mainBtn.addEventListener('click', () => {
+            mainBtn.closest('.sidebar-item-expandable').classList.toggle('expanded');
+        });
+    });
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const viewId = btn.getAttribute('data-tab');
@@ -71,6 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (viewId === 'profiles') {
                 if (window.ChartDistribucionUsuariosComentarios && window.ChartDistribucionUsuariosComentarios.init) window.ChartDistribucionUsuariosComentarios.init();
                 if (window.ChartDistribucionUsuariosComentariosFiltrado && window.ChartDistribucionUsuariosComentariosFiltrado.init) window.ChartDistribucionUsuariosComentariosFiltrado.init();
+                if (typeof Plotly !== 'undefined') {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            ['chartDistribucionComentadoresRed', 'chartDistribucionUsuariosComentarios', 'chartDistribucionUsuariosComentariosFiltrado', 'chartTopProfilesComentadores'].forEach(id => {
+                                const el = document.getElementById(id);
+                                if (el && el.querySelector('.plot-container')) Plotly.Plots.resize(el);
+                            });
+                        }, 50);
+                    });
+                }
             }
         });
     });

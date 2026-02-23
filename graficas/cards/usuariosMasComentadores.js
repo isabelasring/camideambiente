@@ -47,8 +47,9 @@
       const postsHtml = posts.length
         ? posts.map(p => `<span class="user-post-tag" title="${esc(p.shortCaption)}">${esc(p.shortCaption.length > 35 ? p.shortCaption.substring(0, 35) + '…' : p.shortCaption)}</span>`).join('')
         : '';
+      const profileUrl = 'https://www.instagram.com/' + (u.username || '').replace(/^@/, '') + '/';
       return `
-        <div class="user-commenter-item">
+        <a href="${esc(profileUrl)}" target="_blank" rel="noopener noreferrer" class="user-commenter-item user-commenter-item-link">
           <div class="user-commenter-header">
             <div class="user-commenter-avatar-wrap">${pic || '<div class="user-commenter-avatar-placeholder">@</div>'}</div>
             <div class="user-commenter-info">
@@ -61,7 +62,7 @@
             <span class="user-commenter-posts-label">Comentó en:</span>
             ${postsHtml}${more ? `<span class="user-post-tag more">+${more}</span>` : ''}
           </div>
-        </div>
+        </a>
       `;
     };
     const colHtml = (col, offset) => col.map((u, j) => renderItem(u, offset + j)).join('');

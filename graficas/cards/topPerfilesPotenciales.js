@@ -1,35 +1,58 @@
 /**
  * Top 6 perfiles con más seguidores en rango 500-5000, >500 seguidos
- * Fuente: perfilesSeguidores (API)
+ * Gráfico de barras horizontales
  */
 (function() {
   'use strict';
 
   const API_URL = '/api/metrics/top-perfiles-potenciales';
-  const CONTAINER_ID = 'topProfilesGrid';
+  const CHART_ID = 'chartTopProfilesPotenciales';
 
   function load() {
-    const grid = document.getElementById(CONTAINER_ID);
-    if (!grid) return;
+    const container = document.getElementById(CHART_ID);
+    if (!container) return;
 
     fetch((window.location.origin || '') + API_URL)
       .then(r => r.json())
       .then(({ data }) => {
         if (!data || !data.length) {
-          grid.innerHTML = '<p style="color:rgba(255,255,255,0.7);">No hay perfiles en el rango.</p>';
+          container.innerHTML = '<p style="color:rgba(255,255,255,0.7);padding:2rem;">No hay perfiles en el rango.</p>';
           return;
         }
-        const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-        grid.innerHTML = data.map(p => {
-          const name = esc(p.fullName || '—');
-          const short = name.length > 30 ? name.substring(0, 30) + '…' : name;
-          const user = esc(p.username || '');
-          const count = (p.followersCount || 0).toLocaleString('es-CO');
-          return `<div class="top-profile-card"><div class="profile-name" title="${name}">${short}</div><div class="profile-username">@${user}</div><div class="profile-followers-count">${count} seguidores</div></div>`;
-        }).join('');
+        const labels = data.map(p => '@' + (p.username || '')).reverse();
+        const values = data.map(p => p.followersCount || 0).reverse();
+        const textHover = data.map(p => (p.fullName || p.username || '—') + '<br>@' + (p.username || '') + '<br>' + (p.followersCount || 0).toLocaleString('es-CO') + ' seguidores').reverse();
+
+        const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+
+        const trace = {
+          x: values,
+          y: labels,
+          type: 'bar',
+          orientation: 'h',
+          marker: { color: labels.map((_, i) => colors[i % colors.length]), line: { width: 1 } },
+          text: values.map(v => v.toLocaleString('es-CO')),
+          textposition: 'outside',
+          textfont: { color: '#374151', size: 11 },
+          hovertext: textHover,
+          hoverinfo: 'text'
+        };
+
+        const layout = {
+          margin: { l: 100, r: 80, t: 20, b: 40 },
+          xaxis: { title: 'Seguidores', gridcolor: 'rgba(0,0,0,0.08)', tickfont: { color: '#374151' } },
+          yaxis: { tickfont: { color: '#374151', size: 12 } },
+          paper_bgcolor: '#ffffff',
+          plot_bgcolor: '#ffffff',
+          font: { color: '#1f2937' },
+          height: 280,
+          showlegend: false
+        };
+
+        Plotly.newPlot(CHART_ID, [trace], layout, { responsive: true, displayModeBar: true });
       })
       .catch(() => {
-        grid.innerHTML = '<p style="color:rgba(255,255,255,0.7);">Error al cargar.</p>';
+        container.innerHTML = '<p style="color:rgba(255,255,255,0.7);padding:2rem;">Error al cargar.</p>';
       });
   }
 

@@ -83,6 +83,7 @@ router.get('/posts-mas-comentados', (req, res) => {
     const iCaption = idx('caption');
     const iComments = idx('commentscount');
     const iLikes = idx('likescount');
+    const iUrl = idx('url');
     if (iCaption < 0 || iComments < 0 || iLikes < 0) {
       return res.status(500).json({ error: 'Columnas requeridas no encontradas' });
     }
@@ -92,15 +93,112 @@ router.get('/posts-mas-comentados', (req, res) => {
       const caption = (r[iCaption] || '').trim();
       const comments = parseInt(r[iComments], 10) || 0;
       const likes = parseInt(r[iLikes], 10) || 0;
+      const url = (r[iUrl] || '').trim().replace(/\/$/, '');
       const name = caption.replace(/\s+/g, ' ').substring(0, 80);
-      posts.push({ name: name || 'Post sin título', commentsCount: comments, likesCount: likes });
+      posts.push({ name: name || 'Post sin título', commentsCount: comments, likesCount: likes, url: url || null });
     }
     const top23 = posts
       .sort((a, b) => b.commentsCount - a.commentsCount)
-      .slice(0, 23);
+      .slice(0, 23)
+      .map((p, i) => ({ ...p, postIndex: i + 1 }));
     return res.json({ data: top23 });
   } catch (err) {
     console.error('Error posts-mas-comentados:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/metrics/comentadores-post
+ * Primeros 100 comentarios de un post. Parámetro: postUrl
+ * Devuelve usuarios con: username, followersCount, followsCount, commentsInPost, followsCamilo
+ * Para gráfica de burbujas: tamaño = comentarios en el post, color = sigue/no sigue
+ */
+router.get('/comentadores-post', (req, res) => {
+  try {
+    const postUrl = (req.query.postUrl || req.query.post_url || '').trim().replace(/\/$/, '');
+    if (!postUrl) {
+      return res.status(400).json({ error: 'postUrl requerido' });
+    }
+
+    const commentsPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
+    const profilePath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    const seguidoresPath = path.join(CSVJSON_PATH, 'seguidoresCamilo.csv');
+
+    if (!fs.existsSync(commentsPath)) {
+      return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
+    }
+    if (!fs.existsSync(profilePath)) {
+      return res.status(404).json({ error: 'profileUsersComments no encontrado' });
+    }
+    if (!fs.existsSync(seguidoresPath)) {
+      return res.status(404).json({ error: 'seguidoresCamilo no encontrado' });
+    }
+
+    const norm = (u) => (u || '').trim().replace(/\/$/, '');
+    const commentRows = parseCSV(fs.readFileSync(commentsPath, 'utf8'));
+    const cHeaders = commentRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+    const iOwner = cHeaders.indexOf('ownerusername');
+    const iPostUrl = cHeaders.indexOf('posturl');
+    if (iOwner < 0 || iPostUrl < 0) {
+      return res.status(500).json({ error: 'Columnas ownerUsername, postUrl requeridas' });
+    }
+
+    const commentsForPost = [];
+    for (let i = 1; i < commentRows.length && commentsForPost.length < 100; i++) {
+      const r = commentRows[i];
+      const url = norm(r[iPostUrl]);
+      if (url !== norm(postUrl)) continue;
+      const user = (r[iOwner] || '').trim();
+      if (user) commentsForPost.push({ user: user.toLowerCase() });
+    }
+
+    const commentsByUser = {};
+    for (const c of commentsForPost) {
+      const u = c.user;
+      commentsByUser[u] = (commentsByUser[u] || 0) + 1;
+    }
+
+    const segRows = parseCSV(fs.readFileSync(seguidoresPath, 'utf8'));
+    const segHeaders = segRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+    const iSegUser = segHeaders.indexOf('username');
+    const sigueSet = new Set();
+    for (let i = 1; i < segRows.length; i++) {
+      const u = (segRows[i][iSegUser] || '').trim().toLowerCase();
+      if (u) sigueSet.add(u);
+    }
+
+    const profiles = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    const profileMap = new Map();
+    for (const p of (Array.isArray(profiles) ? profiles : [])) {
+      const u = (p.username || '').toLowerCase();
+      if (u) profileMap.set(u, p);
+    }
+
+    const result = [];
+    for (const [user, commentsInPost] of Object.entries(commentsByUser)) {
+      const prof = profileMap.get(user) || {};
+      const followers = parseInt(prof.followersCount, 10) || 1;
+      const follows = parseInt(prof.followsCount, 10) || 1;
+      result.push({
+        username: prof.username || user,
+        fullName: (prof.fullName || '').trim() || user,
+        followersCount: followers,
+        followsCount: follows,
+        followers_plot: Math.max(1, followers),
+        follows_plot: Math.max(1, follows),
+        commentsInPost,
+        followsCamilo: sigueSet.has(user)
+      });
+    }
+
+    return res.json({
+      data: result,
+      postUrl,
+      totalComentarios: commentsForPost.length
+    });
+  } catch (err) {
+    console.error('Error comentadores-post:', err);
     return res.status(500).json({ error: err.message });
   }
 });
@@ -168,8 +266,7 @@ router.get('/usuarios-mas-comentadores', (req, res) => {
           shortCaption: urlToCaption[url] || 'Post'
         }))
       }))
-      .sort((a, b) => b.commentCount - a.commentCount)
-      .slice(0, 100);
+      .sort((a, b) => b.commentCount - a.commentCount);
     return res.json({ data: list });
   } catch (err) {
     console.error('Error usuarios-mas-comentadores:', err);

@@ -55,6 +55,7 @@ function getTopPostsMasComentados() {
     const iCaption = idx('caption');
     const iComments = idx('commentscount');
     const iLikes = idx('likescount');
+    const iUrl = idx('url');
     if (iCaption < 0 || iComments < 0 || iLikes < 0) return [];
     const posts = [];
     for (let i = 1; i < rows.length; i++) {
@@ -62,7 +63,8 @@ function getTopPostsMasComentados() {
       const caption = (r[iCaption] || '').trim();
       const comments = parseInt(r[iComments], 10) || 0;
       const likes = parseInt(r[iLikes], 10) || 0;
-      posts.push({ name: (caption.replace(/\s+/g, ' ').substring(0, 80) || 'Post sin título'), commentsCount: comments, likesCount: likes });
+      const url = (r[iUrl] || '').trim().replace(/\/$/, '') || null;
+      posts.push({ name: (caption.replace(/\s+/g, ' ').substring(0, 80) || 'Post sin título'), commentsCount: comments, likesCount: likes, url });
     }
     return posts.sort((a, b) => b.commentsCount - a.commentsCount).slice(0, 23);
   } catch (e) {
