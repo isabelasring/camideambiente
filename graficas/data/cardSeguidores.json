@@ -1,0 +1,8 @@
+{
+  "id": "card-seguidores",
+  "label": "Total Seguidores",
+  "endpoint": "/api/metrics/seguidores",
+  "icon": "users",
+  "format": "number",
+  "source": "seguidoresCamilo"
+}

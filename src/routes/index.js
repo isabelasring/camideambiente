@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const metricsRouter = require('./metrics');
+
+router.use('/api/metrics', metricsRouter);
 
 // Ruta principal
 router.get('/', (req, res) => {

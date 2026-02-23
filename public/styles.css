@@ -363,6 +363,19 @@ body {
     color: white;
 }
 
+.chart-canvas-wrap {
+    min-height: 500px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.chart-canvas-wrap > div {
+    width: 100%;
+    min-height: 500px;
+}
+
 /* Listas */
 .list-card {
     padding: 1.5rem;

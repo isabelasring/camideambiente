@@ -1,0 +1,8 @@
+{
+  "id": "card-posts",
+  "label": "Total Posts",
+  "endpoint": "/api/metrics/posts",
+  "icon": "posts",
+  "format": "number",
+  "source": "postsCamilo"
+}

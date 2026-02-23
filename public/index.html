@@ -6,6 +6,7 @@
     <title>Geotrends - Analytics Dashboard | Camilo</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 </head>
 <body>
     <!-- Animación de fondo Luma AI -->
@@ -74,7 +75,7 @@
 
             <!-- Tarjetas de métricas -->
             <div class="metrics-grid">
-                <div class="metric-card glass">
+                <div class="metric-card glass" data-card-id="card-seguidores">
                     <div class="metric-header">
                         <span class="metric-label">Total Seguidores</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -84,19 +85,12 @@
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
                     </div>
-                    <div class="metric-value">125.4K</div>
-                    <div class="metric-change positive">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                            <polyline points="17 6 23 6 23 12"></polyline>
-                        </svg>
-                        +12.5%
-                    </div>
+                    <div class="metric-value" id="metric-seguidores">__COUNT_SEGUIDORES__</div>
                 </div>
 
-                <div class="metric-card glass">
+                <div class="metric-card glass" data-card-id="card-posts" style="display:none">
                     <div class="metric-header">
-                        <span class="metric-label">Posts con Más Engagement</span>
+                        <span class="metric-label">Total Posts</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
@@ -105,7 +99,7 @@
                             <polyline points="10 9 9 9 8 9"></polyline>
                         </svg>
                     </div>
-                    <div class="metric-value">23</div>
+                    <div class="metric-value">—</div>
                     <div class="metric-change positive">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -153,10 +147,10 @@
 
             <!-- Fila de gráficas principales -->
             <div class="charts-row">
-                <!-- Gráfica de barras - Engagement por mes -->
+                <!-- Gráfica bubble - Distribución perfiles -->
                 <div class="chart-card glass">
                     <div class="chart-header">
-                        <h3>Engagement por Mes</h3>
+                        <h3>Distribución: Seguidores vs Seguidos (tamaño = posts)</h3>
                         <button class="chart-menu">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="1"></circle>
@@ -165,7 +159,27 @@
                             </svg>
                         </button>
                     </div>
-                    <canvas id="engagementChart"></canvas>
+                    <div class="chart-canvas-wrap" id="chartDistribucionWrap">
+                        <div id="chartDistribucionPerfiles"></div>
+                    </div>
+                </div>
+
+                <!-- Gráfica filtrada: >500 seguidos, 200-5000 seguidores -->
+                <div class="chart-card glass" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3>Filtrado: >500 seguidos, 500-2000 seguidores (tamaño = posts)</h3>
+                        <button class="chart-menu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <div id="chartDistribucionPerfilesFiltrado"></div>
+                    </div>
+                    <div class="chart-filter-stats" id="chartFiltradoStats"></div>
                 </div>
 
                 <!-- Gráfica de dona - Distribución de Seguidores -->
@@ -278,6 +292,10 @@
         </button>
     </div>
 
+    <script src="/graficas/cards/seguidores.js"></script>
+    <script src="/graficas/cards/posts.js"></script>
+    <script src="/graficas/charts/distribucionPerfiles.js"></script>
+    <script src="/graficas/charts/distribucionPerfilesFiltrado.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>
