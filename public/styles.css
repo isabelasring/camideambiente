@@ -566,6 +566,26 @@ body {
     outline: none;
 }
 
+.chart-filter-item input[type="number"] {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 0.9rem;
+    min-width: 100px;
+}
+
+.chart-filter-item input[type="number"]::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.chart-filter-item input[type="number"]:hover,
+.chart-filter-item input[type="number"]:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    outline: none;
+}
+
 .chart-menu {
     background: transparent;
     border: none;

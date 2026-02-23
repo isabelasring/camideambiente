@@ -50,53 +50,54 @@
     return BASE_URL + (params.toString() ? '?' + params.toString() : '');
   }
 
-  function load() {
+  let cached = null;
+
+  function render(data) {
     const container = document.getElementById(CONTAINER_ID);
+    const statsEl = document.getElementById(STATS_ID);
     if (!container) return;
 
-    const statsEl = document.getElementById(STATS_ID);
-    if (statsEl) statsEl.textContent = 'Cargando...';
+    const commentsExactEl = document.getElementById('filterCommentsExactRed');
+    const commentsMinEl = document.getElementById('filterCommentsMinRed');
+    const commentsMaxEl = document.getElementById('filterCommentsMaxRed');
+    const commentsExact = (commentsExactEl && commentsExactEl.value !== '') ? parseInt(commentsExactEl.value, 10) : null;
+    const commentsMin = (commentsMinEl && commentsMinEl.value !== '') ? parseInt(commentsMinEl.value, 10) : null;
+    const commentsMax = (commentsMaxEl && commentsMaxEl.value !== '') ? parseInt(commentsMaxEl.value, 10) : null;
 
-    fetch(buildUrl())
-      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then((body) => {
-        const data = body && body.data;
-        const totalSigue = body && body.totalSigue;
-        const totalNoSigue = body && body.totalNoSigue;
-        const statsBase = body && body.statsBase;
-        const totalFiltrado = body && body.totalFiltrado;
+    let dataFiltrada = data || [];
+    if (commentsExact != null && !isNaN(commentsExact)) {
+      dataFiltrada = dataFiltrada.filter(d => (d.commentsCount ?? 0) === commentsExact);
+    } else {
+      if (commentsMin != null && !isNaN(commentsMin)) {
+        dataFiltrada = dataFiltrada.filter(d => (d.commentsCount ?? 0) >= commentsMin);
+      }
+      if (commentsMax != null && !isNaN(commentsMax)) {
+        dataFiltrada = dataFiltrada.filter(d => (d.commentsCount ?? 0) <= commentsMax);
+      }
+    }
 
-        if (statsBase) {
-          const fmt = n => (n ?? 0).toLocaleString('es-CO');
-          const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
-          set('statBaseRed', statsBase.base);
-          set('statSigueRed', statsBase.sigue);
-          set('statNoSigueRed', statsBase.noSigue);
-          set('statPrivadasRed', statsBase.privadas);
-          set('statPublicasRed', statsBase.publicas);
-          set('statPersonalRed', statsBase.personal);
-          set('statBusinessRed', statsBase.business);
-          set('statVerificadasRed', statsBase.verificadas);
-        }
+    if (!dataFiltrada.length) {
+      if (statsEl) {
+        statsEl.textContent = (commentsExact != null && !isNaN(commentsExact))
+          ? `No hay usuarios con exactamente ${commentsExact} comentarios.`
+          : 'Ningún usuario coincide con el filtro.';
+      }
+      const downloadsEl = document.getElementById(DOWNLOADS_ID);
+      if (downloadsEl) downloadsEl.style.display = 'none';
+      Plotly.purge(CONTAINER_ID);
+      return;
+    }
 
-        if (!data || !data.length) {
-          if (statsEl) statsEl.textContent = 'Ningún usuario coincide con el filtro.';
-          const downloadsEl = document.getElementById(DOWNLOADS_ID);
-          if (downloadsEl) downloadsEl.style.display = 'none';
-          Plotly.purge(CONTAINER_ID);
-          return;
-        }
+    const downloadsEl = document.getElementById(DOWNLOADS_ID);
+    if (downloadsEl) {
+      downloadsEl.style.display = 'flex';
+      downloadsEl._comentadoresData = dataFiltrada;
+    }
 
-        const downloadsEl = document.getElementById(DOWNLOADS_ID);
-        if (downloadsEl) {
-          downloadsEl.style.display = 'flex';
-          downloadsEl._comentadoresData = data;
-        }
+    const sigue = dataFiltrada.filter(d => d.followsCamilo);
+    const noSigue = dataFiltrada.filter(d => !d.followsCamilo);
 
-        const sigue = data.filter(d => d.followsCamilo);
-        const noSigue = data.filter(d => !d.followsCamilo);
-
-        const maxComments = Math.max(1, ...data.map(d => d.commentsCount || 1));
+        const maxComments = Math.max(1, ...dataFiltrada.map(d => d.commentsCount || 1));
         const diamMax = 50;
         const sizeref = (2 * maxComments) / (diamMax * diamMax);
 
@@ -142,12 +143,62 @@
         Plotly.newPlot(CONTAINER_ID, traces, layout, { responsive: true, scrollZoom: true, displayModeBar: true, useResizeHandler: true });
 
         if (statsEl) {
-          const s = (totalSigue ?? 0).toLocaleString('es-CO');
-          const n = (totalNoSigue ?? 0).toLocaleString('es-CO');
-          const tot = (totalFiltrado ?? data.length).toLocaleString('es-CO');
-          statsEl.textContent = `Usuarios en el filtro: ${tot} (Siguen: ${s} | No siguen: ${n})`;
+          const s = sigue.length.toLocaleString('es-CO');
+          const n = noSigue.length.toLocaleString('es-CO');
+          const tot = dataFiltrada.length.toLocaleString('es-CO');
+          let msg = `Usuarios en el filtro: ${tot} (Siguen: ${s} | No siguen: ${n})`;
+          if (commentsExact != null && !isNaN(commentsExact)) {
+            msg += ` · exactamente ${commentsExact} comentarios`;
+          } else if ((commentsMin != null && !isNaN(commentsMin)) || (commentsMax != null && !isNaN(commentsMax))) {
+            const r = [];
+            if (commentsMin != null && !isNaN(commentsMin)) r.push(`≥${commentsMin} comentarios`);
+            if (commentsMax != null && !isNaN(commentsMax)) r.push(`≤${commentsMax} comentarios`);
+            msg += ` · ${r.join(' y ')}`;
+          }
+          statsEl.textContent = msg;
           statsEl.style.cssText = 'margin-top:1rem;color:rgba(255,255,255,0.7);font-size:0.9rem;';
         }
+  }
+
+  function applyCommentsAndRender() {
+    if (cached && cached.data) {
+      render(cached.data);
+    } else {
+      load();
+    }
+  }
+
+  function load() {
+    const statsEl = document.getElementById(STATS_ID);
+    if (statsEl) statsEl.textContent = 'Cargando...';
+    fetch(buildUrl())
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then((body) => {
+        const data = body && body.data;
+        const statsBase = body && body.statsBase;
+        cached = { data: data || [], statsBase };
+
+        if (statsBase) {
+          const fmt = n => (n ?? 0).toLocaleString('es-CO');
+          const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
+          set('statBaseRed', statsBase.base);
+          set('statSigueRed', statsBase.sigue);
+          set('statNoSigueRed', statsBase.noSigue);
+          set('statPrivadasRed', statsBase.privadas);
+          set('statPublicasRed', statsBase.publicas);
+          set('statPersonalRed', statsBase.personal);
+          set('statBusinessRed', statsBase.business);
+          set('statVerificadasRed', statsBase.verificadas);
+        }
+
+        if (!data || !data.length) {
+          if (statsEl) statsEl.textContent = 'Ningún usuario coincide con el filtro.';
+          const downloadsEl = document.getElementById(DOWNLOADS_ID);
+          if (downloadsEl) downloadsEl.style.display = 'none';
+          Plotly.purge(CONTAINER_ID);
+          return;
+        }
+        render(data);
       })
       .catch(err => console.error('Error distribucion-comentadores-red:', err));
   }
@@ -156,6 +207,13 @@
     ['filterPrivateRed', 'filterBusinessRed', 'filterVerifiedRed'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', load);
+    });
+    ['filterCommentsExactRed', 'filterCommentsMinRed', 'filterCommentsMaxRed'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', applyCommentsAndRender);
+        el.addEventListener('change', applyCommentsAndRender);
+      }
     });
     const downloadsEl = document.getElementById(DOWNLOADS_ID);
     if (downloadsEl) {
