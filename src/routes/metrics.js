@@ -106,6 +106,78 @@ router.get('/posts-mas-comentados', (req, res) => {
 });
 
 /**
+ * GET /api/metrics/usuarios-mas-comentadores
+ * Usuarios que más comentan en los 23 posts más populares (primeros 100 comentarios/post)
+ * Fuente: commentsPopularPosts.csv
+ * Incluye en qué posts comentó cada usuario (mapeo desde postsCamilo.csv)
+ */
+router.get('/usuarios-mas-comentadores', (req, res) => {
+  try {
+    const commentsPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
+    const postsPath = path.join(CSVJSON_PATH, 'postsCamilo.csv');
+    if (!fs.existsSync(commentsPath)) {
+      return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
+    }
+    if (!fs.existsSync(postsPath)) {
+      return res.status(404).json({ error: 'postsCamilo no encontrado' });
+    }
+
+    const norm = (u) => (u || '').trim().replace(/\/$/, '');
+    const postRows = parseCSV(fs.readFileSync(postsPath, 'utf8'));
+    const postHeaders = postRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+    const iUrl = postHeaders.indexOf('url');
+    const iCaption = postHeaders.indexOf('caption');
+    const urlToCaption = {};
+    for (let i = 1; i < postRows.length; i++) {
+      const r = postRows[i];
+      const url = norm(r[iUrl]);
+      const cap = (r[iCaption] || '').replace(/\s+/g, ' ').trim().substring(0, 70);
+      if (url) urlToCaption[url] = cap || 'Post';
+    }
+
+    const commentRows = parseCSV(fs.readFileSync(commentsPath, 'utf8'));
+    const cHeaders = commentRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+    const iOwner = cHeaders.indexOf('ownerusername');
+    const iPostUrl = cHeaders.indexOf('posturl');
+    const iPic = cHeaders.indexOf('ownerprofilepicurl');
+    if (iOwner < 0 || iPostUrl < 0) {
+      return res.status(500).json({ error: 'Columnas ownerUsername, postUrl requeridas' });
+    }
+
+    const byUser = {};
+    for (let i = 1; i < commentRows.length; i++) {
+      const r = commentRows[i];
+      const user = (r[iOwner] || '').trim();
+      const postUrl = norm(r[iPostUrl]);
+      const pic = (r[iPic] || '').trim();
+      if (!user) continue;
+      if (!byUser[user]) {
+        byUser[user] = { username: user, profilePicUrl: pic || null, count: 0, postUrls: new Set() };
+      }
+      byUser[user].count++;
+      if (postUrl) byUser[user].postUrls.add(postUrl);
+    }
+
+    const list = Object.values(byUser)
+      .map(u => ({
+        username: u.username,
+        profilePicUrl: u.profilePicUrl,
+        commentCount: u.count,
+        posts: [...u.postUrls].map(url => ({
+          url,
+          shortCaption: urlToCaption[url] || 'Post'
+        }))
+      }))
+      .sort((a, b) => b.commentCount - a.commentCount)
+      .slice(0, 100);
+    return res.json({ data: list });
+  } catch (err) {
+    console.error('Error usuarios-mas-comentadores:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/metrics/posts
  * Cuenta total de posts desde postsCamilo.csv
  */

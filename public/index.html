@@ -288,6 +288,24 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Usuarios que más comentan -->
+                <div class="charts-row" style="margin-bottom: 2rem;">
+                    <div class="list-card glass" style="width: 100%;">
+                        <div class="list-header">
+                            <h3>Usuarios que más comentan</h3>
+                            <span class="post-count-badge" id="usuariosComentadoresBadge">—</span>
+                        </div>
+                        <p class="chart-subtitle" style="margin-bottom:1rem;color:rgba(255,255,255,0.75);">Usuarios más activos en los 23 posts más populares (primeros 100 comentarios por post). Se indica en qué publicaciones comentaron.</p>
+                        <div class="usuarios-comentadores-search-wrap" style="margin-bottom:1rem;">
+                            <input type="text" id="usuariosComentadoresSearch" class="usuarios-comentadores-search" placeholder="Buscar por @usuario..." autocomplete="off">
+                        </div>
+                        <div class="usuarios-comentadores-list" id="usuariosMasComentadoresList">
+                            <!-- Se cargan dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
                 <div class="charts-row">
                     <div class="chart-card glass" style="grid-column: 1 / -1;">
                         <div class="chart-header">
@@ -416,6 +434,7 @@
     <script src="/graficas/cards/commentsAnalizados.js"></script>
     <script src="/graficas/cards/topPerfilesPotenciales.js"></script>
     <script src="/graficas/cards/postsMasComentados.js"></script>
+    <script src="/graficas/cards/usuariosMasComentadores.js"></script>
     <script src="/graficas/charts/distribucionPerfiles.js"></script>
     <script src="/graficas/charts/distribucionPerfilesFiltrado.js"></script>
     <script src="/graficas/charts/wordcloudBiografias.js"></script>
