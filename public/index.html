@@ -364,6 +364,31 @@
                         <div class="chart-filter-stats" id="chartUsuariosComentariosFiltradoStats"></div>
                     </div>
                 </div>
+
+                <!-- Word cloud - biografías usuarios que comentaron -->
+                <div class="chart-card glass" style="grid-column: 1 / -1; margin-top: 2rem;">
+                    <div class="chart-header">
+                        <div>
+                            <h3>Word cloud - Biografías (usuarios que comentaron)</h3>
+                            <p class="chart-subtitle" id="wordcloudSubtitleComentarios">Palabras extraídas de las biografías de perfiles con 200-4000 seguidores</p>
+                        </div>
+                        <div class="wordcloud-controls" style="display:flex;flex-wrap:wrap;align-items:center;gap:1rem;">
+                            <div class="wordcloud-mode-btns" style="display:flex;gap:0.5rem;">
+                                <button type="button" class="btn btn-wordcloud-mode" id="wordcloudModeTotalComentarios" data-mode="total">Total</button>
+                                <button type="button" class="btn btn-wordcloud-mode active" id="wordcloudModeSesgoComentarios" data-mode="sesgo">Sesgo</button>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <label style="color:rgba(255,255,255,0.8);font-size:0.9rem;">Frecuencia mínima:</label>
+                                <input type="range" id="wordcloudMinFreqComentarios" min="2" max="10" value="2">
+                                <span id="wordcloudMinFreqValComentarios" style="color:rgba(255,255,255,0.9);">2</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wordcloud-wrap" id="wordcloudBiografiasComentarios">
+                        <!-- Se renderiza el canvas aquí -->
+                    </div>
+                    <div class="chart-filter-stats" id="wordcloudBiografiasComentariosStats"></div>
+                </div>
             </div><!-- /profiles -->
 
         </main>
@@ -396,6 +421,7 @@
     <script src="/graficas/charts/wordcloudBiografias.js"></script>
     <script src="/graficas/charts/distribucionUsuariosComentarios.js"></script>
     <script src="/graficas/charts/distribucionUsuariosComentariosFiltrado.js"></script>
+    <script src="/graficas/charts/wordcloudBiografiasComentarios.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

@@ -401,6 +401,51 @@ router.get('/wordcloud-biografias', (req, res) => {
 });
 
 /**
+ * GET /api/metrics/wordcloud-biografias-comentarios
+ * Fuente: profileUsersComments.json (usuarios que comentaron)
+ * mode=total: todas las biografías
+ * mode=sesgo: solo perfiles 200-4000 seguidores
+ */
+router.get('/wordcloud-biografias-comentarios', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'profileUsersComments no encontrado' });
+    }
+    const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    const profiles = Array.isArray(raw) ? raw : [];
+    const mode = (req.query.mode || 'sesgo').toLowerCase();
+    const filtered = mode === 'total'
+      ? profiles
+      : profiles.filter(p => {
+          const f = parseInt(p.followersCount, 10) || 0;
+          return f >= 200 && f <= 4000;
+        });
+    const text = filtered.map(p => (p.biography || '').trim()).filter(Boolean).join(' ');
+    const rawWords = text
+      .toLowerCase()
+      .replace(/[^a-záéíóúñü0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(/\s+/);
+    const words = removeStopwords(rawWords, STOPWORDS)
+      .filter(w => w.length >= 2 && !/^\d+$/.test(w));
+    const counts = {};
+    words.forEach(w => { counts[w] = (counts[w] || 0) + 1; });
+    const minFreq = Math.max(1, parseInt(req.query.min_freq, 10) || 2);
+    const list = Object.entries(counts)
+      .filter(([, c]) => c >= minFreq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 200)
+      .map(([w, c]) => [w, c]);
+    return res.json({ list, total: filtered.length, palabras: list.length });
+  } catch (err) {
+    console.error('Error wordcloud-biografias-comentarios:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * Carga perfilesSeguidores desde JSON o CSV
  */
 function cargarPerfilesSeguidores() {
