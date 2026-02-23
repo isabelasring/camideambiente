@@ -630,7 +630,7 @@ function cargarPerfilesSeguidores() {
     if (lines.length < 2) return [];
     const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
     const idx = (name) => headers.indexOf(name) >= 0 ? headers.indexOf(name) : -1;
-    const iFull = idx('fullname'), iUser = idx('username'), iFol = idx('followerscount'), iFolw = idx('followscount');
+    const iFull = idx('fullname'), iUser = idx('username'), iFol = idx('followerscount'), iFolw = idx('followscount'), iPosts = idx('postscount');
     if (iFull < 0 || iFol < 0) return [];
     const rows = [];
     for (let i = 1; i < lines.length; i++) {
@@ -639,7 +639,8 @@ function cargarPerfilesSeguidores() {
         fullName: (parts[iFull] || '').trim(),
         username: (iUser >= 0 ? parts[iUser] : '') || '',
         followersCount: parseInt(parts[iFol], 10) || 0,
-        followsCount: (iFolw >= 0 ? parseInt(parts[iFolw], 10) : 0) || 0
+        followsCount: (iFolw >= 0 ? parseInt(parts[iFolw], 10) : 0) || 0,
+        postsCount: (iPosts >= 0 ? parseInt(parts[iPosts], 10) : 0) || 0
       });
     }
     return rows;
@@ -650,7 +651,7 @@ function cargarPerfilesSeguidores() {
 /**
  * GET /api/metrics/top-perfiles-potenciales
  * Lee perfilesSeguidores (JSON o CSV), filtra rango 500-5000 seguidores y >500 seguidos,
- * devuelve los 6 con más seguidores para las cards.
+ * devuelve top 10 ordenados por seguidores (1º) y posts (2º).
  */
 router.get('/top-perfiles-potenciales', (req, res) => {
   try {
@@ -668,10 +669,14 @@ router.get('/top-perfiles-potenciales', (req, res) => {
         fullName: (p.fullName || '').trim() || p.username || '—',
         username: (p.username || '').trim() || '',
         followersCount: parseInt(p.followersCount, 10) || 0,
-        followsCount: parseInt(p.followsCount, 10) || 0
+        followsCount: parseInt(p.followsCount, 10) || 0,
+        postsCount: parseInt(p.postsCount, 10) || 0
       }))
-      .sort((a, b) => b.followersCount - a.followersCount)
-      .slice(0, 6);
+      .sort((a, b) => {
+        if (b.followersCount !== a.followersCount) return b.followersCount - a.followersCount;
+        return b.postsCount - a.postsCount;
+      })
+      .slice(0, 10);
     return res.json({ data: filtered });
   } catch (err) {
     console.error('Error top-perfiles-potenciales:', err);
@@ -681,31 +686,63 @@ router.get('/top-perfiles-potenciales', (req, res) => {
 
 /**
  * GET /api/metrics/top-perfiles-comentadores
- * Top 6 perfiles con más seguidores en rango 200-4000
- * Fuente: profileUsersComments.json (usuarios que comentaron)
+ * Top 10 usuarios que más comentaron, con seguidores y comentarios.
+ * Fuente: commentsPopularPosts.csv (conteo) + profileUsersComments.json (seguidores)
  */
 router.get('/top-perfiles-comentadores', (req, res) => {
   try {
-    const jsonPath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
-    if (!fs.existsSync(jsonPath)) {
+    const commentsPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
+    const profilePath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    if (!fs.existsSync(commentsPath)) {
+      return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
+    }
+    if (!fs.existsSync(profilePath)) {
       return res.status(404).json({ error: 'profileUsersComments no encontrado' });
     }
-    const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+
+    const norm = (u) => (u || '').trim().replace(/\/$/, '');
+    const commentRows = parseCSV(fs.readFileSync(commentsPath, 'utf8'));
+    const cHeaders = commentRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+    const iOwner = cHeaders.indexOf('ownerusername');
+    const iPostUrl = cHeaders.indexOf('posturl');
+    if (iOwner < 0) {
+      return res.status(500).json({ error: 'Columna ownerUsername requerida' });
+    }
+
+    const byUser = {};
+    for (let i = 1; i < commentRows.length; i++) {
+      const r = commentRows[i];
+      const user = (r[iOwner] || '').trim();
+      if (!user) continue;
+      if (!byUser[user]) byUser[user] = { count: 0, postUrls: new Set() };
+      byUser[user].count++;
+      const postUrl = iPostUrl >= 0 ? norm(r[iPostUrl]) : '';
+      if (postUrl) byUser[user].postUrls.add(postUrl);
+    }
+
+    const raw = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
     const profiles = Array.isArray(raw) ? raw : [];
-    const filtered = profiles
-      .filter(p => {
-        const followers = parseInt(p.followersCount, 10) || 0;
-        return followers >= 200 && followers <= 4000;
+    const profileMap = {};
+    for (const p of profiles) {
+      const u = (p.username || '').trim().toLowerCase();
+      if (u) profileMap[u] = p;
+    }
+
+    const list = Object.entries(byUser)
+      .map(([username, info]) => {
+        const prof = profileMap[(username || '').toLowerCase()];
+        const followersCount = prof ? (parseInt(prof.followersCount, 10) || 0) : 0;
+        return {
+          username: username.trim(),
+          fullName: (prof?.fullName || '').trim() || username || '—',
+          commentCount: info.count,
+          postsCommented: info.postUrls.size,
+          followersCount
+        };
       })
-      .map(p => ({
-        fullName: (p.fullName || '').trim() || p.username || '—',
-        username: (p.username || '').trim() || '',
-        followersCount: parseInt(p.followersCount, 10) || 0,
-        followsCount: parseInt(p.followsCount, 10) || 0
-      }))
-      .sort((a, b) => b.followersCount - a.followersCount)
-      .slice(0, 6);
-    return res.json({ data: filtered });
+      .sort((a, b) => b.commentCount - a.commentCount)
+      .slice(0, 10);
+    return res.json({ data: list });
   } catch (err) {
     console.error('Error top-perfiles-comentadores:', err);
     return res.status(500).json({ error: err.message });
