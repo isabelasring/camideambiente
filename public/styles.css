@@ -382,12 +382,41 @@ body {
     min-width: 200px;
 }
 
+.chart-stats-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.chart-stat-card {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 90px;
+}
+
+.chart-stat-card .chart-stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+}
+
+.chart-stat-card .chart-stat-value {
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
 .chart-filters-row {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     align-items: flex-end;
-    margin-top: 0.75rem;
+    margin-top: 1rem;
 }
 
 .chart-filter-item {

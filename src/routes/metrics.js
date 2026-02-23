@@ -284,6 +284,14 @@ router.get('/perfiles-seguidores', (req, res) => {
       });
     }
     const totalEnRango = filtered.length;
+    const statsBase = {
+      base: totalEnRango,
+      privadas: filtered.filter(p => p.private).length,
+      publicas: filtered.filter(p => !p.private).length,
+      personal: filtered.filter(p => !p.isBusinessAccount).length,
+      business: filtered.filter(p => p.isBusinessAccount).length,
+      verificadas: filtered.filter(p => p.verified).length
+    };
     if (filterPrivate === 'true' || filterPrivate === 'false') {
       const wantPrivate = filterPrivate === 'true';
       filtered = filtered.filter(p => p.private === wantPrivate);
@@ -302,7 +310,8 @@ router.get('/perfiles-seguidores', (req, res) => {
       data: sampled,
       total: data.length,
       totalEnRango,
-      totalFiltrado: filtered.length
+      totalFiltrado: filtered.length,
+      statsBase
     });
   } catch (err) {
     console.error('Error perfiles-seguidores:', err);

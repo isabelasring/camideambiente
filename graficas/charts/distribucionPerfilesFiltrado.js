@@ -43,7 +43,17 @@
     if (stats) stats.textContent = 'Cargando...';
     fetch(buildUrl())
       .then(r => r.json())
-      .then(({ data, total, totalEnRango, totalFiltrado }) => {
+      .then(({ data, total, totalEnRango, totalFiltrado, statsBase }) => {
+        if (statsBase) {
+          const fmt = n => (n ?? 0).toLocaleString('es-CO');
+          const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
+          set('statBase', statsBase.base);
+          set('statPrivadas', statsBase.privadas);
+          set('statPublicas', statsBase.publicas);
+          set('statPersonal', statsBase.personal);
+          set('statBusiness', statsBase.business);
+          set('statVerificadas', statsBase.verificadas);
+        }
         if (!data || !data.length) {
           const stats = document.getElementById(STATS_ID);
           if (stats) stats.textContent = 'No hay perfiles que cumplan el filtro';
