@@ -582,4 +582,37 @@ router.get('/top-perfiles-potenciales', (req, res) => {
   }
 });
 
+/**
+ * GET /api/metrics/top-perfiles-comentadores
+ * Top 6 perfiles con más seguidores en rango 200-4000
+ * Fuente: profileUsersComments.json (usuarios que comentaron)
+ */
+router.get('/top-perfiles-comentadores', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'profileUsersComments no encontrado' });
+    }
+    const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    const profiles = Array.isArray(raw) ? raw : [];
+    const filtered = profiles
+      .filter(p => {
+        const followers = parseInt(p.followersCount, 10) || 0;
+        return followers >= 200 && followers <= 4000;
+      })
+      .map(p => ({
+        fullName: (p.fullName || '').trim() || p.username || '—',
+        username: (p.username || '').trim() || '',
+        followersCount: parseInt(p.followersCount, 10) || 0,
+        followsCount: parseInt(p.followsCount, 10) || 0
+      }))
+      .sort((a, b) => b.followersCount - a.followersCount)
+      .slice(0, 6);
+    return res.json({ data: filtered });
+  } catch (err) {
+    console.error('Error top-perfiles-comentadores:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

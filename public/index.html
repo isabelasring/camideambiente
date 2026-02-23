@@ -407,6 +407,16 @@
                     </div>
                     <div class="chart-filter-stats" id="wordcloudBiografiasComentariosStats"></div>
                 </div>
+
+                <!-- Top 6 perfiles (sesgo 200-4000) - usuarios que comentaron -->
+                <div class="top-profiles-section glass" style="margin-top: 2rem;">
+                    <h3 class="top-profiles-title">Top profiles (usuarios que comentaron)</h3>
+                    <p class="top-profiles-subtitle">Top 6 cuentas con más seguidores en el rango 200-4000 (usuarios que comentaron en posts virales):</p>
+                    <div class="top-profiles-grid" id="topProfilesComentadoresGrid">
+                        <!-- Se cargan dinámicamente -->
+                    </div>
+                    <p class="top-profiles-desc">Perfiles con mayor alcance entre quienes comentan en publicaciones populares.</p>
+                </div>
             </div><!-- /profiles -->
 
         </main>
@@ -441,6 +451,7 @@
     <script src="/graficas/charts/distribucionUsuariosComentarios.js"></script>
     <script src="/graficas/charts/distribucionUsuariosComentariosFiltrado.js"></script>
     <script src="/graficas/charts/wordcloudBiografiasComentarios.js"></script>
+    <script src="/graficas/cards/topPerfilesComentadores.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>
