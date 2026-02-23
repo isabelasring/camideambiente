@@ -276,36 +276,7 @@
 
             <!-- Vista profiles: posts + usuarios que comentaron -->
             <div class="dashboard-view" data-view="profiles" style="display:none;">
-                <!-- Posts con más comentarios - arriba -->
-                <div class="charts-row" style="margin-bottom: 2rem;">
-                    <div class="list-card glass" style="width: 100%;">
-                        <div class="list-header">
-                            <h3>Posts con más comentarios</h3>
-                            <span class="post-count-badge">23 posts</span>
-                        </div>
-                        <div class="posts-list" id="postsList">
-                            <!-- Los posts se cargan dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Usuarios que más comentan -->
-                <div class="charts-row" style="margin-bottom: 2rem;">
-                    <div class="list-card glass" style="width: 100%;">
-                        <div class="list-header">
-                            <h3>Usuarios que más comentan</h3>
-                            <span class="post-count-badge" id="usuariosComentadoresBadge">—</span>
-                        </div>
-                        <p class="chart-subtitle" style="margin-bottom:1rem;color:rgba(255,255,255,0.75);">Usuarios más activos en los 23 posts más populares (primeros 100 comentarios por post). Se indica en qué publicaciones comentaron.</p>
-                        <div class="usuarios-comentadores-search-wrap" style="margin-bottom:1rem;">
-                            <input type="text" id="usuariosComentadoresSearch" class="usuarios-comentadores-search" placeholder="Buscar por @usuario..." autocomplete="off">
-                        </div>
-                        <div class="usuarios-comentadores-list" id="usuariosMasComentadoresList">
-                            <!-- Se cargan dinámicamente -->
-                        </div>
-                    </div>
-                </div>
-
+                <!-- 1. Usuarios que comentaron en posts virales -->
                 <div class="charts-row">
                     <div class="chart-card glass" style="grid-column: 1 / -1;">
                         <div class="chart-header">
@@ -326,7 +297,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Gráfica filtrada: solo 200-4000 seguidores (usuarios comentarios) -->
+                <!-- 2. Distribución filtrada: 200-4000 seguidores (usuarios comentarios) -->
                 <div class="charts-row">
                     <div class="chart-card glass" style="grid-column: 1 / -1;">
                         <div class="chart-header chart-header-with-filters">
@@ -383,7 +354,7 @@
                     </div>
                 </div>
 
-                <!-- Word cloud - biografías usuarios que comentaron -->
+                <!-- 3. Word cloud - biografías usuarios que comentaron -->
                 <div class="chart-card glass" style="grid-column: 1 / -1; margin-top: 2rem;">
                     <div class="chart-header">
                         <div>
@@ -406,6 +377,95 @@
                         <!-- Se renderiza el canvas aquí -->
                     </div>
                     <div class="chart-filter-stats" id="wordcloudBiografiasComentariosStats"></div>
+                </div>
+
+                <!-- Posts con más comentarios -->
+                <div class="charts-row" style="margin-bottom: 2rem;">
+                    <div class="list-card glass" style="width: 100%;">
+                        <div class="list-header">
+                            <h3>Posts con más comentarios</h3>
+                            <span class="post-count-badge">23 posts</span>
+                        </div>
+                        <div class="posts-list" id="postsList">
+                            <!-- Se cargan dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usuarios que más comentan -->
+                <div class="charts-row" style="margin-bottom: 2rem;">
+                    <div class="list-card glass" style="width: 100%;">
+                        <div class="list-header">
+                            <h3>Usuarios que más comentan</h3>
+                            <span class="post-count-badge" id="usuariosComentadoresBadge">—</span>
+                        </div>
+                        <p class="chart-subtitle" style="margin-bottom:1rem;color:rgba(255,255,255,0.75);">Usuarios más activos en los 23 posts más populares (primeros 100 comentarios por post). Se indica en qué publicaciones comentaron.</p>
+                        <div class="usuarios-comentadores-search-wrap" style="margin-bottom:1rem;">
+                            <input type="text" id="usuariosComentadoresSearch" class="usuarios-comentadores-search" placeholder="Buscar por @usuario..." autocomplete="off">
+                        </div>
+                        <div class="usuarios-comentadores-list" id="usuariosMasComentadoresList">
+                            <!-- Se cargan dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ¿Comentadores en la red de Camilo? -->
+                <div class="charts-row">
+                    <div class="chart-card glass" style="grid-column: 1 / -1;">
+                        <div class="chart-header chart-header-with-filters">
+                            <div class="chart-header-left">
+                                <h3>¿Comentadores en la red de Camilo?</h3>
+                                <p class="chart-subtitle">Todos los usuarios que comentaron en los 23 posts virales. Verde = siguen a Camilo. Naranja = no siguen. Tamaño = posts comentados.</p>
+                                <div class="chart-stats-cards" id="chartComentadoresRedStatsCards">
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Base</span><span class="chart-stat-value" id="statBaseRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Siguen</span><span class="chart-stat-value" id="statSigueRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">No siguen</span><span class="chart-stat-value" id="statNoSigueRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Privadas</span><span class="chart-stat-value" id="statPrivadasRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Públicas</span><span class="chart-stat-value" id="statPublicasRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Personal</span><span class="chart-stat-value" id="statPersonalRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Business</span><span class="chart-stat-value" id="statBusinessRed">—</span></div>
+                                    <div class="chart-stat-card"><span class="chart-stat-label">Verificadas</span><span class="chart-stat-value" id="statVerificadasRed">—</span></div>
+                                </div>
+                                <div class="chart-filters-row">
+                                    <div class="chart-filter-item">
+                                        <label for="filterPrivateRed">Privada/Pública</label>
+                                        <select id="filterPrivateRed">
+                                            <option value="">Todas</option>
+                                            <option value="true">Privada</option>
+                                            <option value="false">Pública</option>
+                                        </select>
+                                    </div>
+                                    <div class="chart-filter-item">
+                                        <label for="filterBusinessRed">Tipo cuenta</label>
+                                        <select id="filterBusinessRed">
+                                            <option value="">Todas</option>
+                                            <option value="false">Personal</option>
+                                            <option value="true">Business</option>
+                                        </select>
+                                    </div>
+                                    <div class="chart-filter-item">
+                                        <label for="filterVerifiedRed">Verificada</label>
+                                        <select id="filterVerifiedRed">
+                                            <option value="">Todas</option>
+                                            <option value="true">Sí</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="chart-menu">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="19" cy="12" r="1"></circle>
+                                    <circle cx="5" cy="12" r="1"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="chart-canvas-wrap chart-canvas-wrap-tall">
+                            <div id="chartDistribucionComentadoresRed"></div>
+                        </div>
+                        <div class="chart-filter-stats" id="chartComentadoresRedStats"></div>
+                    </div>
                 </div>
 
                 <!-- Top 6 perfiles (sesgo 200-4000) - usuarios que comentaron -->
@@ -449,6 +509,7 @@
     <script src="/graficas/charts/distribucionPerfilesFiltrado.js"></script>
     <script src="/graficas/charts/wordcloudBiografias.js"></script>
     <script src="/graficas/charts/distribucionUsuariosComentarios.js"></script>
+    <script src="/graficas/charts/distribucionComentadoresRed.js"></script>
     <script src="/graficas/charts/distribucionUsuariosComentariosFiltrado.js"></script>
     <script src="/graficas/charts/wordcloudBiografiasComentarios.js"></script>
     <script src="/graficas/cards/topPerfilesComentadores.js"></script>

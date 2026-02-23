@@ -483,6 +483,11 @@ body {
     max-height: 100%;
 }
 
+.chart-canvas-wrap-tall {
+    min-height: 520px;
+    height: 520px;
+}
+
 .wordcloud-wrap {
     min-height: 400px;
     height: 400px;

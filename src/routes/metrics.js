@@ -615,4 +615,111 @@ router.get('/top-perfiles-comentadores', (req, res) => {
   }
 });
 
+/**
+ * GET /api/metrics/distribucion-comentadores-red
+ * Todos los usuarios que comentaron en los 23 posts virales
+ * X: seguidos, Y: seguidores, size: cantidad de comentarios del usuario
+ * followsCamilo: true si está en seguidoresCamilo
+ * Query: private, is_business, verified
+ */
+router.get('/distribucion-comentadores-red', (req, res) => {
+  try {
+    const profilePath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    const seguidoresPath = path.join(CSVJSON_PATH, 'seguidoresCamilo.csv');
+    const commentsPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
+    if (!fs.existsSync(profilePath)) {
+      return res.status(404).json({ error: 'profileUsersComments no encontrado' });
+    }
+    if (!fs.existsSync(seguidoresPath)) {
+      return res.status(404).json({ error: 'seguidoresCamilo no encontrado' });
+    }
+
+    const toBool = (v) => v === true || v === 'true' || v === 'True' || v === '1';
+    const seguidoresRows = parseCSV(fs.readFileSync(seguidoresPath, 'utf8'));
+    const segHeaders = seguidoresRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+    const iUser = segHeaders.indexOf('username');
+    const sigueSet = new Set();
+    for (let i = 1; i < seguidoresRows.length; i++) {
+      const u = (seguidoresRows[i][iUser] || '').trim().toLowerCase();
+      if (u) sigueSet.add(u);
+    }
+
+    const commentsCountByUser = new Map();
+    if (fs.existsSync(commentsPath)) {
+      const commentsRows = parseCSV(fs.readFileSync(commentsPath, 'utf8'));
+      const commHeaders = commentsRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+      const iOwner = commHeaders.indexOf('ownerusername');
+      for (let i = 1; i < commentsRows.length; i++) {
+        const u = (commentsRows[i][iOwner] || '').trim().toLowerCase();
+        if (u) commentsCountByUser.set(u, (commentsCountByUser.get(u) || 0) + 1);
+      }
+    }
+
+    const profiles = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    const list = Array.isArray(profiles) ? profiles : [];
+    let filtered = list
+      .filter(p => p.followersCount != null && p.followsCount != null)
+      .map(p => {
+        const followers = parseInt(p.followersCount, 10) || 1;
+        const follows = parseInt(p.followsCount, 10) || 1;
+        const posts = parseFloat(p.postsCount) || 0;
+        const user = (p.username || '').toLowerCase();
+        const followsCamilo = sigueSet.has(user);
+        const commentsCount = commentsCountByUser.get(user) || 1;
+        return {
+          username: p.username || '',
+          fullName: (p.fullName || '').trim() || p.username || '—',
+          followers_plot: Math.max(1, followers),
+          follows_plot: Math.max(1, follows),
+          followersCount: followers,
+          followsCount: follows,
+          postsCount: (posts === 0 || isNaN(posts)) ? 1 : posts,
+          commentsCount,
+          followsCamilo,
+          private: toBool(p.private),
+          isBusinessAccount: toBool(p.isBusinessAccount),
+          verified: toBool(p.verified)
+        };
+      });
+
+    const statsBase = {
+      base: filtered.length,
+      privadas: filtered.filter(p => p.private).length,
+      publicas: filtered.filter(p => !p.private).length,
+      personal: filtered.filter(p => !p.isBusinessAccount).length,
+      business: filtered.filter(p => p.isBusinessAccount).length,
+      verificadas: filtered.filter(p => p.verified).length,
+      sigue: filtered.filter(p => p.followsCamilo).length,
+      noSigue: filtered.filter(p => !p.followsCamilo).length
+    };
+
+    const filterPrivate = req.query.private;
+    const filterBusiness = req.query.is_business;
+    const filterVerified = req.query.verified;
+    if (filterPrivate === 'true' || filterPrivate === 'false') {
+      const want = filterPrivate === 'true';
+      filtered = filtered.filter(p => p.private === want);
+    }
+    if (filterBusiness === 'true' || filterBusiness === 'false') {
+      const want = filterBusiness === 'true';
+      filtered = filtered.filter(p => p.isBusinessAccount === want);
+    }
+    if (filterVerified === 'true' || filterVerified === 'false') {
+      const want = filterVerified === 'true';
+      filtered = filtered.filter(p => p.verified === want);
+    }
+
+    return res.json({
+      data: filtered,
+      totalSigue: filtered.filter(d => d.followsCamilo).length,
+      totalNoSigue: filtered.filter(d => !d.followsCamilo).length,
+      totalFiltrado: filtered.length,
+      statsBase
+    });
+  } catch (err) {
+    console.error('Error distribucion-comentadores-red:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
