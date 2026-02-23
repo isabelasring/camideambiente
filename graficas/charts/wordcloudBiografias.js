@@ -1,14 +1,16 @@
 /**
- * Word cloud: biografías de perfiles 500-5000 seguidores
+ * Word cloud: biografías de perfiles
  * Fuente: perfilesSeguidores.json
+ * Mode total: todos | Mode sesgo: 500-5000 seguidores
  */
 (function() {
   'use strict';
 
-  const API_URL = '/api/metrics/wordcloud-biografias';
+  const BASE_URL = '/api/metrics/wordcloud-biografias';
   const CONTAINER_ID = 'wordcloudBiografias';
   const MIN_FREQ_ID = 'wordcloudMinFreq';
   const STATS_ID = 'wordcloudBiografiasStats';
+  const SUBTITLE_ID = 'wordcloudSubtitle';
 
   function render(list, minFreq) {
     const container = document.getElementById(CONTAINER_ID);
@@ -40,16 +42,26 @@
     }
   }
 
-  function load(minFreq) {
-    const url = minFreq ? `${API_URL}?min_freq=${minFreq}` : API_URL;
+  function load(minFreq, mode) {
+    const m = mode || 'sesgo';
+    const params = new URLSearchParams({ mode: m });
+    if (minFreq) params.set('min_freq', String(minFreq));
+    const url = BASE_URL + '?' + params.toString();
     fetch(url)
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then((body) => {
         const list = body && body.list;
         const total = body && body.total || 0;
         const statsEl = document.getElementById(STATS_ID);
+        const subtitleEl = document.getElementById(SUBTITLE_ID);
         if (statsEl) {
-          statsEl.textContent = `Perfiles en rango 500-5000 seguidores: ${total.toLocaleString()} | Palabras: ${(list || []).length}`;
+          const label = m === 'total' ? 'Perfiles totales' : 'Perfiles 500-5000 seguidores';
+          statsEl.textContent = `${label}: ${total.toLocaleString()} | Palabras: ${(list || []).length}`;
+        }
+        if (subtitleEl) {
+          subtitleEl.textContent = m === 'total'
+            ? 'Palabras extraídas de las biografías de todos los perfiles'
+            : 'Palabras extraídas de las biografías de perfiles con 500-5000 seguidores';
         }
         if (list && list.length) {
           render(list, minFreq);
@@ -69,20 +81,42 @@
     const container = document.getElementById(CONTAINER_ID);
     if (!container) return;
 
+    let mode = 'sesgo';
+    let minFreq = 2;
+    const refresh = () => load(minFreq, mode);
+
     const minFreqEl = document.getElementById(MIN_FREQ_ID);
     const minFreqValEl = document.getElementById('wordcloudMinFreqVal');
-    let minFreq = 2;
     if (minFreqEl) {
       minFreq = parseInt(minFreqEl.value, 10) || 2;
       if (minFreqValEl) minFreqValEl.textContent = minFreq;
       minFreqEl.addEventListener('input', () => {
         minFreq = parseInt(minFreqEl.value, 10) || 2;
         if (minFreqValEl) minFreqValEl.textContent = minFreq;
-        load(minFreq);
+        refresh();
       });
     }
 
-    load(minFreq);
+    const totalBtn = document.getElementById('wordcloudModeTotal');
+    const sesgoBtn = document.getElementById('wordcloudModeSesgo');
+    const setActive = (active) => {
+      totalBtn?.classList.toggle('active', active === 'total');
+      sesgoBtn?.classList.toggle('active', active === 'sesgo');
+    };
+    totalBtn?.addEventListener('click', () => {
+      if (mode === 'total') return;
+      mode = 'total';
+      setActive('total');
+      refresh();
+    });
+    sesgoBtn?.addEventListener('click', () => {
+      if (mode === 'sesgo') return;
+      mode = 'sesgo';
+      setActive('sesgo');
+      refresh();
+    });
+
+    refresh();
   }
 
   if (document.readyState === 'loading') {

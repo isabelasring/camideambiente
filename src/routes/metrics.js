@@ -353,11 +353,13 @@ router.get('/perfiles-seguidores', (req, res) => {
   }
 });
 
-const STOPWORDS_ES = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'del', 'al', 'a', 'y', 'e', 'en', 'con', 'por', 'para', 'que', 'es', 'son', 'se', 'su', 'sus', 'lo', 'le', 'mi', 'tu', 'te', 'nos', 'os', 'si', 'no', 'pero', 'o', 'como', 'mas', 'más', 'muy', 'me', 'este', 'esta', 'estos', 'estas', 'ese', 'esa', 'eso', 'aquí', 'ahí', 'allí', 'también', 'solo', 'ya', 'sí', 'ser', 'estar', 'tener', 'hacer', 'ir', 'ver', 'hay', 'puede', 'todo', 'todos', 'algo', 'nada', 'otro', 'otra', 'otros', 'otras', 'entre', 'hasta', 'desde', 'cuando', 'donde', 'quien', 'cual', 'cuales', 'cuyo', 'cuya', 'sobre', 'contra', 'sin', 'bajo', 'tras', 'durante', 'mediante', 'según', 'creador', 'contacto', 'contactanos']);
+const { removeStopwords, spa, eng, fra, por } = require('stopword');
+const STOPWORDS = [...spa, ...eng, ...fra, ...por];
 
 /**
  * GET /api/metrics/wordcloud-biografias
- * Perfiles 500-5000 seguidores: frecuencias de palabras en biografías
+ * mode=total: todas las biografías de perfilesSeguidores.json
+ * mode=sesgo: solo perfiles 500-5000 seguidores
  */
 router.get('/wordcloud-biografias', (req, res) => {
   try {
@@ -367,18 +369,22 @@ router.get('/wordcloud-biografias', (req, res) => {
     }
     const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     const profiles = Array.isArray(raw) ? raw : [];
-    const filtered = profiles.filter(p => {
-      const f = parseInt(p.followersCount, 10) || 0;
-      return f >= 500 && f <= 5000;
-    });
+    const mode = (req.query.mode || 'sesgo').toLowerCase();
+    const filtered = mode === 'total'
+      ? profiles
+      : profiles.filter(p => {
+          const f = parseInt(p.followersCount, 10) || 0;
+          return f >= 500 && f <= 5000;
+        });
     const text = filtered.map(p => (p.biography || '').trim()).filter(Boolean).join(' ');
-    const words = text
+    const rawWords = text
       .toLowerCase()
       .replace(/[^a-záéíóúñü0-9\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .split(/\s+/)
-      .filter(w => w.length >= 2 && !STOPWORDS_ES.has(w) && !/^\d+$/.test(w));
+      .split(/\s+/);
+    const words = removeStopwords(rawWords, STOPWORDS)
+      .filter(w => w.length >= 2 && !/^\d+$/.test(w));
     const counts = {};
     words.forEach(w => { counts[w] = (counts[w] || 0) + 1; });
     const minFreq = Math.max(1, parseInt(req.query.min_freq, 10) || 2);

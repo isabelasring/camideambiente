@@ -506,7 +506,25 @@ body {
 }
 
 .wordcloud-controls input[type="range"] {
-    width: 100px;
+  width: 100px;
+}
+
+.btn-wordcloud-mode {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-wordcloud-mode:hover {
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+.btn-wordcloud-mode.active {
+  background: var(--white-hover, rgba(255,255,255,0.25));
+  color: white;
+  border-color: rgba(255,255,255,0.4);
 }
 
 /* Top profiles */
