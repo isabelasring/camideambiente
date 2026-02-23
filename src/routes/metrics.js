@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const router = express.Router();
-const CSVJSON_PATH = path.resolve(process.cwd(), 'csvjson');
+// Ruta relativa al proyecto (src/routes -> proyecto raíz)
+const CSVJSON_PATH = path.join(__dirname, '..', '..', 'csvjson');
 
 /**
  * GET /api/metrics/seguidores
@@ -32,6 +33,79 @@ router.get('/seguidores', (req, res) => {
 });
 
 /**
+ * Parsea CSV con campos entre comillas (soporta newlines y comas dentro)
+ */
+function parseCSV(content) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < content.length; i++) {
+    const c = content[i];
+    const next = content[i + 1];
+    if (inQuotes) {
+      if (c === '"') {
+        if (next === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',' || c === '\n' || c === '\r') {
+        row.push(field.trim());
+        field = '';
+        if (c === '\n' || (c === '\r' && next !== '\n')) {
+          if (row.some(cell => cell)) rows.push(row);
+          row = [];
+        }
+        if (c === '\r' && next === '\n') i++;
+      } else field += c;
+    }
+  }
+  if (field || row.length) row.push(field.trim()), rows.push(row);
+  return rows;
+}
+
+/**
+ * GET /api/metrics/posts-mas-comentados
+ * Top 23 posts por comentarios desde postsCamilo.csv
+ */
+router.get('/posts-mas-comentados', (req, res) => {
+  try {
+    const csvPath = path.join(CSVJSON_PATH, 'postsCamilo.csv');
+    if (!fs.existsSync(csvPath)) {
+      return res.status(404).json({ error: 'postsCamilo no encontrado' });
+    }
+    const content = fs.readFileSync(csvPath, 'utf8');
+    const rows = parseCSV(content);
+    if (rows.length < 2) return res.json({ data: [] });
+    const headers = rows[0].map(h => (h || '').toLowerCase().trim());
+    const idx = (n) => headers.indexOf(n) >= 0 ? headers.indexOf(n) : -1;
+    const iCaption = idx('caption');
+    const iComments = idx('commentscount');
+    const iLikes = idx('likescount');
+    if (iCaption < 0 || iComments < 0 || iLikes < 0) {
+      return res.status(500).json({ error: 'Columnas requeridas no encontradas' });
+    }
+    const posts = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const caption = (r[iCaption] || '').trim();
+      const comments = parseInt(r[iComments], 10) || 0;
+      const likes = parseInt(r[iLikes], 10) || 0;
+      const name = caption.replace(/\s+/g, ' ').substring(0, 80);
+      posts.push({ name: name || 'Post sin título', commentsCount: comments, likesCount: likes });
+    }
+    const top23 = posts
+      .sort((a, b) => b.commentsCount - a.commentsCount)
+      .slice(0, 23);
+    return res.json({ data: top23 });
+  } catch (err) {
+    console.error('Error posts-mas-comentados:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/metrics/posts
  * Cuenta total de posts desde postsCamilo.csv
  */
@@ -48,6 +122,50 @@ router.get('/posts', (req, res) => {
   } catch (err) {
     console.error('Error leyendo posts:', err);
     return res.status(500).json({ error: 'Error al leer datos de posts' });
+  }
+});
+
+/**
+ * GET /api/metrics/perfiles-analizados
+ * Cuenta desde perfilesSeguidores.csv o .json
+ */
+router.get('/perfiles-analizados', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.json');
+    if (fs.existsSync(jsonPath)) {
+      const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const count = Array.isArray(data) ? data.length : 0;
+      return res.json({ count, source: 'perfilesSeguidores.json' });
+    }
+    const csvPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.csv');
+    if (fs.existsSync(csvPath)) {
+      const content = fs.readFileSync(csvPath, 'utf8');
+      const lines = content.trim().split('\n').filter(l => l.trim());
+      return res.json({ count: Math.max(0, lines.length - 1), source: 'perfilesSeguidores.csv' });
+    }
+    return res.status(404).json({ error: 'perfilesSeguidores no encontrado' });
+  } catch (err) {
+    console.error('Error perfiles-analizados:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/metrics/comments-analizados
+ * Cuenta desde commentsPopularPosts.csv (cada fila = 1 comentario)
+ */
+router.get('/comments-analizados', (req, res) => {
+  try {
+    const csvPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
+    if (fs.existsSync(csvPath)) {
+      const content = fs.readFileSync(csvPath, 'utf8');
+      const lines = content.trim().split('\n').filter(l => l.trim());
+      return res.json({ count: Math.max(0, lines.length - 1), source: 'commentsPopularPosts.csv' });
+    }
+    return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
+  } catch (err) {
+    console.error('Error comments-analizados:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -117,6 +235,71 @@ router.get('/perfiles-seguidores', (req, res) => {
   } catch (err) {
     console.error('Error perfiles-seguidores:', err);
     return res.status(500).json({ error: 'Error al leer perfilesSeguidores' });
+  }
+});
+
+/**
+ * Carga perfilesSeguidores desde JSON o CSV
+ */
+function cargarPerfilesSeguidores() {
+  const jsonPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.json');
+  const csvPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.csv');
+  if (fs.existsSync(jsonPath)) {
+    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    return Array.isArray(data) ? data : [];
+  }
+  if (fs.existsSync(csvPath)) {
+    const content = fs.readFileSync(csvPath, 'utf8');
+    const lines = content.trim().split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+    const idx = (name) => headers.indexOf(name) >= 0 ? headers.indexOf(name) : -1;
+    const iFull = idx('fullname'), iUser = idx('username'), iFol = idx('followerscount'), iFolw = idx('followscount');
+    if (iFull < 0 || iFol < 0) return [];
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      rows.push({
+        fullName: (parts[iFull] || '').trim(),
+        username: (iUser >= 0 ? parts[iUser] : '') || '',
+        followersCount: parseInt(parts[iFol], 10) || 0,
+        followsCount: (iFolw >= 0 ? parseInt(parts[iFolw], 10) : 0) || 0
+      });
+    }
+    return rows;
+  }
+  return null;
+}
+
+/**
+ * GET /api/metrics/top-perfiles-potenciales
+ * Lee perfilesSeguidores (JSON o CSV), filtra rango 500-5000 seguidores y >500 seguidos,
+ * devuelve los 6 con más seguidores para las cards.
+ */
+router.get('/top-perfiles-potenciales', (req, res) => {
+  try {
+    const raw = cargarPerfilesSeguidores();
+    if (!raw || !Array.isArray(raw)) {
+      return res.status(404).json({ error: 'perfilesSeguidores no encontrado' });
+    }
+    const filtered = raw
+      .filter(p => {
+        const followers = parseInt(p.followersCount, 10) || 0;
+        const follows = parseInt(p.followsCount, 10) || 0;
+        return follows > 500 && followers >= 500 && followers <= 5000;
+      })
+      .map(p => ({
+        fullName: (p.fullName || '').trim() || p.username || '—',
+        username: (p.username || '').trim() || '',
+        followersCount: parseInt(p.followersCount, 10) || 0,
+        followsCount: parseInt(p.followsCount, 10) || 0
+      }))
+      .sort((a, b) => b.followersCount - a.followersCount)
+      .slice(0, 6);
+    return res.json({ data: filtered });
+  } catch (err) {
+    console.error('Error top-perfiles-potenciales:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 

@@ -57,39 +57,40 @@
         const layout = {
           title: {
             text: 'Distribución de perfiles: Seguidores vs Seguidos (tamaño = posts)',
-            font: { size: 16, color: '#e5e7eb' }
+            font: { size: 14, color: '#1f2937' }
           },
           xaxis: {
             title: 'Following (seguidos) - escala log',
             type: 'log',
-            gridcolor: 'rgba(255,255,255,0.2)',
-            tickfont: { color: '#d1d5db', size: 11 },
-            titlefont: { color: '#e5e7eb' }
+            gridcolor: 'rgba(0,0,0,0.1)',
+            tickfont: { color: '#374151', size: 11 },
+            titlefont: { color: '#1f2937' }
           },
           yaxis: {
             title: 'Followers (seguidores) - escala log',
             type: 'log',
-            gridcolor: 'rgba(255,255,255,0.2)',
-            tickfont: { color: '#d1d5db', size: 11 },
-            titlefont: { color: '#e5e7eb' }
+            gridcolor: 'rgba(0,0,0,0.1)',
+            tickfont: { color: '#374151', size: 11 },
+            titlefont: { color: '#1f2937' }
           },
-          paper_bgcolor: 'rgba(0,0,0,0)',
-          plot_bgcolor: 'rgba(255,255,255,0.08)',
-          font: { color: '#e5e7eb' },
-          height: 500,
+          paper_bgcolor: '#ffffff',
+          plot_bgcolor: '#ffffff',
+          font: { color: '#1f2937' },
+          height: 400,
+          autosize: true,
           showlegend: true,
           legend: {
-            title: { text: 'Segmento', font: { color: '#e5e7eb' } },
-            font: { color: '#d1d5db' },
+            title: { text: 'Segmento', font: { color: '#1f2937' } },
+            font: { color: '#374151' },
             yanchor: 'top',
             y: 1,
             xanchor: 'left',
             x: 1.02
           },
-          margin: { t: 60, r: 120, b: 60, l: 70 }
+          margin: { t: 50, r: 140, b: 50, l: 60 }
         };
 
-        const config = { responsive: true, scrollZoom: true, displayModeBar: true };
+        const config = { responsive: true, scrollZoom: true, displayModeBar: true, useResizeHandler: true };
 
         Plotly.newPlot(CONTAINER_ID, traces, layout, config);
       })

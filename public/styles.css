@@ -262,6 +262,23 @@ body {
     box-shadow: var(--shadow);
 }
 
+/* Fila: perfil Camilo (izq) + métricas (der) lado a lado */
+.metrics-and-profile-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    align-items: start;
+}
+
+.metrics-and-profile-row .metrics-grid {
+    margin-bottom: 0;
+}
+
+.metrics-and-profile-row .profile-card {
+    min-width: 320px;
+}
+
 /* Grid de métricas */
 .metrics-grid {
     display: grid;
@@ -331,8 +348,8 @@ body {
 
 .chart-card {
     padding: 1.5rem;
-    min-height: 400px;
-    max-height: 500px;
+    min-height: 420px;
+    overflow: hidden;
 }
 
 .chart-header {
@@ -364,16 +381,93 @@ body {
 }
 
 .chart-canvas-wrap {
-    min-height: 500px;
+    min-height: 420px;
+    height: 420px;
     position: relative;
-    background: rgba(255, 255, 255, 0.08);
+    background: #ffffff;
     border-radius: 12px;
     padding: 1rem;
+    overflow: hidden;
 }
 
-.chart-canvas-wrap > div {
-    width: 100%;
-    min-height: 500px;
+.chart-canvas-wrap > div,
+.chart-canvas-wrap .plot-container {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-canvas-wrap canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Top profiles */
+.top-profiles-section {
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 20px;
+}
+
+.top-profiles-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.top-profiles-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.top-profiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.top-profile-card {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--glass-border);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.top-profile-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.top-profile-card .profile-name {
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-profile-card .profile-username {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+}
+
+.top-profile-card .profile-followers-count {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 0.35rem;
+}
+
+.top-profiles-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 /* Listas */
@@ -393,6 +487,14 @@ body {
     color: white;
     font-size: 1.1rem;
     font-weight: 600;
+}
+
+.post-count-badge {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
 }
 
 .btn-small {
@@ -620,6 +722,12 @@ body {
 
 /* Responsive */
 @media (max-width: 1200px) {
+    .metrics-and-profile-row {
+        grid-template-columns: 1fr;
+    }
+    .metrics-and-profile-row .profile-card {
+        min-width: unset;
+    }
     .bottom-row {
         grid-template-columns: 1fr;
     }
