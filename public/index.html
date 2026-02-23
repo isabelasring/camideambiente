@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.2/wordcloud2.min.js"></script>
 </head>
 <body>
     <!-- Animación de fondo Luma AI -->
@@ -66,13 +67,15 @@
             <div class="content-header">
                 <h1>Dashboard de Instagram</h1>
                 <div class="header-buttons">
-                    <button class="btn active">followers</button>
-                    <button class="btn">profiles</button>
-                    <button class="btn">posts</button>
-                    <button class="btn">images</button>
+                    <button class="btn active" data-tab="followers">followers</button>
+                    <button class="btn" data-tab="profiles">profiles</button>
+                    <button class="btn" data-tab="posts">posts</button>
+                    <button class="btn" data-tab="images">images</button>
                 </div>
             </div>
 
+            <!-- Vista followers (por defecto) -->
+            <div class="dashboard-view" data-view="followers">
             <!-- Perfil Camilo + Tarjetas de métricas lado a lado -->
             <div class="metrics-and-profile-row">
                 <!-- Información del Perfil Camilo (izquierda) -->
@@ -178,10 +181,38 @@
                     </div>
                 </div>
 
-                <!-- Gráfica filtrada: >500 seguidos, 200-5000 seguidores -->
+                <!-- Filtros adicionales + Gráfica filtrada -->
                 <div class="chart-card glass" style="grid-column: 1 / -1;">
-                    <div class="chart-header">
-                        <h3>Filtrado: >500 seguidos, 500-5000 seguidores (tamaño = posts)</h3>
+                    <div class="chart-header chart-header-with-filters">
+                        <div class="chart-header-left">
+                            <h3>Filtrado: >500 seguidos, 500-5000 seguidores (tamaño = posts)</h3>
+                            <div class="chart-filters-row">
+                            <div class="chart-filter-item">
+                                <label for="filterPrivate">Privada/Pública</label>
+                                <select id="filterPrivate">
+                                    <option value="">Todas</option>
+                                    <option value="true">Privada</option>
+                                    <option value="false">Pública</option>
+                                </select>
+                            </div>
+                            <div class="chart-filter-item">
+                                <label for="filterBusiness">Tipo cuenta</label>
+                                <select id="filterBusiness">
+                                    <option value="">Todas</option>
+                                    <option value="false">Personal</option>
+                                    <option value="true">Business</option>
+                                </select>
+                            </div>
+                            <div class="chart-filter-item">
+                                <label for="filterVerified">Verificada</label>
+                                <select id="filterVerified">
+                                    <option value="">Todas</option>
+                                    <option value="true">Sí</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            </div>
+                        </div>
                         <button class="chart-menu">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="1"></circle>
@@ -196,6 +227,25 @@
                     <div class="chart-filter-stats" id="chartFiltradoStats"></div>
                 </div>
 
+                <!-- Word cloud - biografías de perfiles 500-5000 seguidores -->
+                <div class="chart-card glass" style="grid-column: 1 / -1; margin-top: 2rem;">
+                    <div class="chart-header">
+                        <div>
+                            <h3>Word cloud - Biografías</h3>
+                            <p class="chart-subtitle">Palabras extraídas de las biografías de perfiles con 500-5000 seguidores</p>
+                        </div>
+                        <div class="wordcloud-controls">
+                            <label style="color:rgba(255,255,255,0.8);font-size:0.9rem;">Frecuencia mínima:</label>
+                            <input type="range" id="wordcloudMinFreq" min="2" max="10" value="2" style="margin-left:0.5rem;">
+                            <span id="wordcloudMinFreqVal" style="color:rgba(255,255,255,0.9);margin-left:0.5rem;">2</span>
+                        </div>
+                    </div>
+                    <div class="wordcloud-wrap" id="wordcloudBiografias">
+                        <!-- Se renderiza el canvas aquí -->
+                    </div>
+                    <div class="chart-filter-stats" id="wordcloudBiografiasStats"></div>
+                </div>
+
             </div>
 
             <!-- Top profiles - debajo de las 2 gráficas -->
@@ -208,19 +258,65 @@
                 <p class="top-profiles-desc">Perfiles con mayor alcance potencial en la campaña. Los conteos de seguidores y seguidos ayudan a entender la influencia y conectividad de cada perfil en la red.</p>
             </div>
 
-            <!-- Segunda fila de gráficas -->
-            <div class="charts-row">
-                <!-- Lista de Posts con más comentarios -->
-                <div class="list-card glass">
-                    <div class="list-header">
-                        <h3>Posts con más comentarios</h3>
-                        <span class="post-count-badge">23 posts</span>
-                    </div>
-                    <div class="posts-list" id="postsList">
-                        <!-- Los posts se cargarán dinámicamente -->
+            </div><!-- /followers -->
+
+            <!-- Vista profiles: posts + usuarios que comentaron -->
+            <div class="dashboard-view" data-view="profiles" style="display:none;">
+                <!-- Posts con más comentarios - arriba -->
+                <div class="charts-row" style="margin-bottom: 2rem;">
+                    <div class="list-card glass" style="width: 100%;">
+                        <div class="list-header">
+                            <h3>Posts con más comentarios</h3>
+                            <span class="post-count-badge">23 posts</span>
+                        </div>
+                        <div class="posts-list" id="postsList">
+                            <!-- Los posts se cargan dinámicamente -->
+                        </div>
                     </div>
                 </div>
-            </div>
+                <div class="charts-row">
+                    <div class="chart-card glass" style="grid-column: 1 / -1;">
+                        <div class="chart-header">
+                            <div>
+                                <h3>Usuarios que comentaron en posts virales</h3>
+                                <p class="chart-subtitle">Seguidores vs seguidos (tamaño = posts). Primeros 100 comentarios por post más comentado.</p>
+                            </div>
+                            <button class="chart-menu">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="19" cy="12" r="1"></circle>
+                                    <circle cx="5" cy="12" r="1"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="chart-canvas-wrap">
+                            <div id="chartDistribucionUsuariosComentarios"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Gráfica filtrada: solo 500-5000 seguidores -->
+                <div class="charts-row">
+                    <div class="chart-card glass" style="grid-column: 1 / -1;">
+                        <div class="chart-header">
+                            <div>
+                                <h3>Distribución filtrada: 500-5000 seguidores</h3>
+                                <p class="chart-subtitle">Solo usuarios que comentaron en posts virales, dentro del rango 500-5000 seguidores. Tamaño = posts.</p>
+                            </div>
+                            <button class="chart-menu">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="19" cy="12" r="1"></circle>
+                                    <circle cx="5" cy="12" r="1"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="chart-canvas-wrap">
+                            <div id="chartDistribucionUsuariosComentariosFiltrado"></div>
+                        </div>
+                        <div class="chart-filter-stats" id="chartUsuariosComentariosFiltradoStats"></div>
+                    </div>
+                </div>
+            </div><!-- /profiles -->
 
         </main>
     </div>
@@ -249,6 +345,9 @@
     <script src="/graficas/cards/postsMasComentados.js"></script>
     <script src="/graficas/charts/distribucionPerfiles.js"></script>
     <script src="/graficas/charts/distribucionPerfilesFiltrado.js"></script>
+    <script src="/graficas/charts/wordcloudBiografias.js"></script>
+    <script src="/graficas/charts/distribucionUsuariosComentarios.js"></script>
+    <script src="/graficas/charts/distribucionUsuariosComentariosFiltrado.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

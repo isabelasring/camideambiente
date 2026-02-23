@@ -56,8 +56,25 @@ if (engagementCtx) {
     });
 }
 
-// Efectos interactivos
+// Tabs: followers / profiles / posts / images
 document.addEventListener('DOMContentLoaded', () => {
+    const tabBtns = document.querySelectorAll('.header-buttons .btn[data-tab]');
+    const views = document.querySelectorAll('.dashboard-view[data-view]');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const viewId = btn.getAttribute('data-tab');
+            tabBtns.forEach(b => b.classList.toggle('active', b === btn));
+            const hasView = document.querySelector('.dashboard-view[data-view="' + viewId + '"]');
+            views.forEach(v => {
+                v.style.display = (v.getAttribute('data-view') === viewId || (!hasView && v.getAttribute('data-view') === 'followers')) ? '' : 'none';
+            });
+            if (viewId === 'profiles') {
+                if (window.ChartDistribucionUsuariosComentarios && window.ChartDistribucionUsuariosComentarios.init) window.ChartDistribucionUsuariosComentarios.init();
+                if (window.ChartDistribucionUsuariosComentariosFiltrado && window.ChartDistribucionUsuariosComentariosFiltrado.init) window.ChartDistribucionUsuariosComentariosFiltrado.init();
+            }
+        });
+    });
+
     // Animación de entrada para las tarjetas
     const cards = document.querySelectorAll('.glass');
     cards.forEach((card, index) => {

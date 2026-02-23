@@ -365,6 +365,59 @@ body {
     font-weight: 600;
 }
 
+.chart-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+    font-weight: 400;
+}
+
+.chart-header-with-filters {
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.chart-header-left {
+    flex: 1;
+    min-width: 200px;
+}
+
+.chart-filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-top: 0.75rem;
+}
+
+.chart-filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.chart-filter-item label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.chart-filter-item select {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.chart-filter-item select:hover,
+.chart-filter-item select:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    outline: none;
+}
+
 .chart-menu {
     background: transparent;
     border: none;
@@ -399,6 +452,32 @@ body {
 .chart-canvas-wrap canvas {
     max-width: 100%;
     max-height: 100%;
+}
+
+.wordcloud-wrap {
+    min-height: 400px;
+    height: 400px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wordcloud-wrap canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.wordcloud-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.wordcloud-controls input[type="range"] {
+    width: 100px;
 }
 
 /* Top profiles */

@@ -183,15 +183,16 @@ function calcularSegmento(followersCount, postsCount) {
 }
 
 /**
- * GET /api/metrics/perfiles-seguidores
- * Datos para gráfica Plotly: follows_plot, followers_plot, postsCount (size), segmento
- * Igual lógica que analisis_posibles_votantes.ipynb
+ * GET /api/metrics/perfiles-comentarios
+ * Usuarios que comentaron en los posts más comentados (top 100 por post)
+ * Fuente: profileUsersComments.json
+ * Mismo formato que perfiles-seguidores para la gráfica bubble
  */
-router.get('/perfiles-seguidores', (req, res) => {
+router.get('/perfiles-comentarios', (req, res) => {
   try {
-    const jsonPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.json');
+    const jsonPath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
     if (!fs.existsSync(jsonPath)) {
-      return res.status(404).json({ error: 'perfilesSeguidores no encontrado' });
+      return res.status(404).json({ error: 'profileUsersComments no encontrado' });
     }
     let raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     if (!Array.isArray(raw)) raw = [];
@@ -213,13 +214,11 @@ router.get('/perfiles-seguidores', (req, res) => {
           segmento: calcularSegmento(followers, posts)
         };
       });
-    const minFollows = parseInt(req.query.min_follows, 10);
     const minFollowers = parseInt(req.query.min_followers, 10);
     const maxFollowers = parseInt(req.query.max_followers, 10);
     let filtered = data;
-    if (!isNaN(minFollows) || !isNaN(minFollowers) || !isNaN(maxFollowers)) {
+    if (!isNaN(minFollowers) || !isNaN(maxFollowers)) {
       filtered = data.filter(p => {
-        if (!isNaN(minFollows) && p.followsCount <= minFollows) return false;
         if (!isNaN(minFollowers) && p.followersCount < minFollowers) return false;
         if (!isNaN(maxFollowers) && p.followersCount > maxFollowers) return false;
         return true;
@@ -227,14 +226,128 @@ router.get('/perfiles-seguidores', (req, res) => {
     }
     const step = Math.max(1, Math.floor(filtered.length / 1000));
     const sampled = filtered.filter((_, i) => i % step === 0).slice(0, 1000);
+    return res.json({ data: sampled, total: data.length, totalFiltrado: filtered.length });
+  } catch (err) {
+    console.error('Error perfiles-comentarios:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/metrics/perfiles-seguidores
+ * Datos para gráfica Plotly: follows_plot, followers_plot, postsCount (size), segmento
+ * Igual lógica que analisis_posibles_votantes.ipynb
+ */
+router.get('/perfiles-seguidores', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'perfilesSeguidores no encontrado' });
+    }
+    let raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (!Array.isArray(raw)) raw = [];
+    const toBool = (v) => v === true || v === 'true' || v === 'True' || v === '1';
+    const data = raw
+      .filter(p => p.followersCount != null && p.followsCount != null)
+      .map(p => {
+        const followers = parseInt(p.followersCount, 10) || 1;
+        const follows = parseInt(p.followsCount, 10) || 1;
+        const posts = parseFloat(p.postsCount) || 0;
+        const postsPlot = (posts === 0 || isNaN(posts)) ? 0.1 : posts;
+        return {
+          followers_plot: Math.max(1, followers),
+          follows_plot: Math.max(1, follows),
+          postsCount: postsPlot,
+          followersCount: followers,
+          followsCount: follows,
+          username: p.username || '',
+          fullName: (p.fullName || '').trim() || p.username || '—',
+          segmento: calcularSegmento(followers, posts),
+          private: toBool(p.private),
+          isBusinessAccount: toBool(p.isBusinessAccount),
+          verified: toBool(p.verified)
+        };
+      });
+    const minFollows = parseInt(req.query.min_follows, 10);
+    const minFollowers = parseInt(req.query.min_followers, 10);
+    const maxFollowers = parseInt(req.query.max_followers, 10);
+    const filterPrivate = req.query.private;
+    const filterBusiness = req.query.is_business;
+    const filterVerified = req.query.verified;
+    let filtered = data;
+    if (!isNaN(minFollows) || !isNaN(minFollowers) || !isNaN(maxFollowers)) {
+      filtered = filtered.filter(p => {
+        if (!isNaN(minFollows) && p.followsCount <= minFollows) return false;
+        if (!isNaN(minFollowers) && p.followersCount < minFollowers) return false;
+        if (!isNaN(maxFollowers) && p.followersCount > maxFollowers) return false;
+        return true;
+      });
+    }
+    const totalEnRango = filtered.length;
+    if (filterPrivate === 'true' || filterPrivate === 'false') {
+      const wantPrivate = filterPrivate === 'true';
+      filtered = filtered.filter(p => p.private === wantPrivate);
+    }
+    if (filterBusiness === 'true' || filterBusiness === 'false') {
+      const wantBusiness = filterBusiness === 'true';
+      filtered = filtered.filter(p => p.isBusinessAccount === wantBusiness);
+    }
+    if (filterVerified === 'true' || filterVerified === 'false') {
+      const wantVerified = filterVerified === 'true';
+      filtered = filtered.filter(p => p.verified === wantVerified);
+    }
+    const step = Math.max(1, Math.floor(filtered.length / 1000));
+    const sampled = filtered.filter((_, i) => i % step === 0).slice(0, 1000);
     return res.json({
       data: sampled,
       total: data.length,
+      totalEnRango,
       totalFiltrado: filtered.length
     });
   } catch (err) {
     console.error('Error perfiles-seguidores:', err);
     return res.status(500).json({ error: 'Error al leer perfilesSeguidores' });
+  }
+});
+
+const STOPWORDS_ES = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'del', 'al', 'a', 'y', 'e', 'en', 'con', 'por', 'para', 'que', 'es', 'son', 'se', 'su', 'sus', 'lo', 'le', 'mi', 'tu', 'te', 'nos', 'os', 'si', 'no', 'pero', 'o', 'como', 'mas', 'más', 'muy', 'me', 'este', 'esta', 'estos', 'estas', 'ese', 'esa', 'eso', 'aquí', 'ahí', 'allí', 'también', 'solo', 'ya', 'sí', 'ser', 'estar', 'tener', 'hacer', 'ir', 'ver', 'hay', 'puede', 'todo', 'todos', 'algo', 'nada', 'otro', 'otra', 'otros', 'otras', 'entre', 'hasta', 'desde', 'cuando', 'donde', 'quien', 'cual', 'cuales', 'cuyo', 'cuya', 'sobre', 'contra', 'sin', 'bajo', 'tras', 'durante', 'mediante', 'según', 'creador', 'contacto', 'contactanos']);
+
+/**
+ * GET /api/metrics/wordcloud-biografias
+ * Perfiles 500-5000 seguidores: frecuencias de palabras en biografías
+ */
+router.get('/wordcloud-biografias', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'perfilesSeguidores.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'perfilesSeguidores no encontrado' });
+    }
+    const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    const profiles = Array.isArray(raw) ? raw : [];
+    const filtered = profiles.filter(p => {
+      const f = parseInt(p.followersCount, 10) || 0;
+      return f >= 500 && f <= 5000;
+    });
+    const text = filtered.map(p => (p.biography || '').trim()).filter(Boolean).join(' ');
+    const words = text
+      .toLowerCase()
+      .replace(/[^a-záéíóúñü0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(w => w.length >= 2 && !STOPWORDS_ES.has(w) && !/^\d+$/.test(w));
+    const counts = {};
+    words.forEach(w => { counts[w] = (counts[w] || 0) + 1; });
+    const minFreq = Math.max(1, parseInt(req.query.min_freq, 10) || 2);
+    const list = Object.entries(counts)
+      .filter(([, c]) => c >= minFreq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 200)
+      .map(([w, c]) => [w, c]);
+    return res.json({ list, total: filtered.length, palabras: list.length });
+  } catch (err) {
+    console.error('Error wordcloud-biografias:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 

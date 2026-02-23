@@ -1,31 +1,17 @@
 /**
- * Gráfico Plotly filtrado: >500 seguidos Y 500-5000 seguidores
- * Filtros adicionales: privada/pública, personal/business, verificada
+ * Gráfico Plotly filtrado: Usuarios que comentaron - solo rango 500-5000 seguidores
+ * - Y: seguidores, X: seguidos (escala log)
+ * - size: postsCount
+ * - Solo muestra usuarios con 500 <= seguidores <= 5000
  */
 (function() {
   'use strict';
 
-  const BASE_URL = '/api/metrics/perfiles-seguidores';
-  const MIN_FOLLOWS = 500;
+  const API_URL = '/api/metrics/perfiles-comentarios?min_followers=500&max_followers=5000';
   const MIN_FOLLOWERS = 500;
   const MAX_FOLLOWERS = 5000;
-  const CONTAINER_ID = 'chartDistribucionPerfilesFiltrado';
-  const STATS_ID = 'chartFiltradoStats';
-
-  function buildUrl() {
-    const params = new URLSearchParams({
-      min_follows: String(MIN_FOLLOWS),
-      min_followers: String(MIN_FOLLOWERS),
-      max_followers: String(MAX_FOLLOWERS)
-    });
-    const priv = document.getElementById('filterPrivate');
-    const bus = document.getElementById('filterBusiness');
-    const ver = document.getElementById('filterVerified');
-    if (priv && priv.value) params.set('private', priv.value);
-    if (bus && bus.value) params.set('is_business', bus.value);
-    if (ver && ver.value) params.set('verified', ver.value);
-    return BASE_URL + '?' + params.toString();
-  }
+  const CONTAINER_ID = 'chartDistribucionUsuariosComentariosFiltrado';
+  const STATS_ID = 'chartUsuariosComentariosFiltradoStats';
 
   const SEGMENTO_COLORS = {
     regular: '#94a3b8',
@@ -35,30 +21,34 @@
     bajo_engagement: '#4ade80'
   };
 
-  function load() {
+  function init() {
     const container = document.getElementById(CONTAINER_ID);
-    const stats = document.getElementById(STATS_ID);
     if (!container) return;
 
-    if (stats) stats.textContent = 'Cargando...';
-    fetch(buildUrl())
-      .then(r => r.json())
-      .then(({ data, total, totalEnRango, totalFiltrado }) => {
+    fetch(API_URL)
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
+      .then((body) => {
+        const data = body && body.data;
+        const total = body && body.total;
+        const totalFiltrado = body && body.totalFiltrado;
+
         if (!data || !data.length) {
           const stats = document.getElementById(STATS_ID);
-          if (stats) stats.textContent = 'No hay perfiles que cumplan el filtro';
+          if (stats) stats.textContent = 'No hay usuarios en el rango 500-5000 seguidores';
           return;
         }
 
         const dataFiltrada = data.filter(d => {
           const f = d.followersCount ?? d.followers_plot ?? 0;
-          const s = d.followsCount ?? d.follows_plot ?? 0;
-          return s > MIN_FOLLOWS && f >= MIN_FOLLOWERS && f <= MAX_FOLLOWERS;
+          return f >= MIN_FOLLOWERS && f <= MAX_FOLLOWERS;
         });
 
         if (!dataFiltrada.length) {
           const stats = document.getElementById(STATS_ID);
-          if (stats) stats.textContent = 'No hay perfiles que cumplan el filtro (500-5000 seguidores, >500 seguidos)';
+          if (stats) stats.textContent = 'No hay usuarios en el rango 500-5000 seguidores';
           return;
         }
 
@@ -88,7 +78,7 @@
 
         const layout = {
           title: {
-            text: 'Filtrado: >500 seguidos, 500-5000 seguidores (tamaño = posts)',
+            text: 'Filtrado: 500-5000 seguidores (tamaño = posts)',
             font: { size: 14, color: '#1f2937' }
           },
           xaxis: {
@@ -126,22 +116,13 @@
 
         const stats = document.getElementById(STATS_ID);
         if (stats) {
-          const n = (totalFiltrado ?? dataFiltrada.length).toLocaleString();
-          const tot = (totalEnRango ?? total ?? 0).toLocaleString();
-          stats.textContent = `Perfiles que cumplen el filtro: ${n} de ${tot} (rango 500-5000 seguidores, >500 seguidos)`;
+          const n = dataFiltrada.length.toLocaleString();
+          const tot = (total ?? 0).toLocaleString();
+          stats.textContent = `Usuarios en el rango: ${n} de ${tot} totales (500-5000 seguidores)`;
           stats.style.cssText = 'margin-top:1rem;color:rgba(255,255,255,0.7);font-size:0.9rem;';
         }
       })
-      .catch(err => console.error('Error cargando distribucion filtrada:', err));
-  }
-
-  function init() {
-    const loadOnChange = () => { load(); };
-    ['filterPrivate', 'filterBusiness', 'filterVerified'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('change', loadOnChange);
-    });
-    load();
+      .catch(err => console.error('Error cargando usuarios comentarios filtrado:', err));
   }
 
   if (document.readyState === 'loading') {
@@ -150,5 +131,5 @@
     init();
   }
 
-  window.ChartDistribucionPerfilesFiltrado = { init, load };
+  window.ChartDistribucionUsuariosComentariosFiltrado = { init };
 })();
