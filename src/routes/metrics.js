@@ -140,6 +140,7 @@ router.get('/comentadores-post', (req, res) => {
     const cHeaders = commentRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
     const iOwner = cHeaders.indexOf('ownerusername');
     const iPostUrl = cHeaders.indexOf('posturl');
+    const iText = cHeaders.indexOf('text');
     if (iOwner < 0 || iPostUrl < 0) {
       return res.status(500).json({ error: 'Columnas ownerUsername, postUrl requeridas' });
     }
@@ -150,13 +151,20 @@ router.get('/comentadores-post', (req, res) => {
       const url = norm(r[iPostUrl]);
       if (url !== norm(postUrl)) continue;
       const user = (r[iOwner] || '').trim();
-      if (user) commentsForPost.push({ user: user.toLowerCase() });
+      const text = iText >= 0 ? (r[iText] || '').trim() : '';
+      if (user) commentsForPost.push({ user: user.toLowerCase(), text });
     }
 
     const commentsByUser = {};
+    const commentsTextsByUser = {};
     for (const c of commentsForPost) {
       const u = c.user;
       commentsByUser[u] = (commentsByUser[u] || 0) + 1;
+      if (c.text) {
+        const arr = commentsTextsByUser[u] || [];
+        arr.push(c.text);
+        commentsTextsByUser[u] = arr;
+      }
     }
 
     const segRows = parseCSV(fs.readFileSync(seguidoresPath, 'utf8'));
@@ -188,6 +196,7 @@ router.get('/comentadores-post', (req, res) => {
         followers_plot: Math.max(1, followers),
         follows_plot: Math.max(1, follows),
         commentsInPost,
+        commentsTexts: commentsTextsByUser[user] || [],
         followsCamilo: sigueSet.has(user)
       });
     }
@@ -1056,13 +1065,23 @@ router.get('/distribucion-comentadores-red', (req, res) => {
     }
 
     const commentsCountByUser = new Map();
+    const commentsTextsByUser = new Map();
     if (fs.existsSync(commentsPath)) {
       const commentsRows = parseCSV(fs.readFileSync(commentsPath, 'utf8'));
       const commHeaders = commentsRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
       const iOwner = commHeaders.indexOf('ownerusername');
+      const iText = commHeaders.indexOf('text');
       for (let i = 1; i < commentsRows.length; i++) {
         const u = (commentsRows[i][iOwner] || '').trim().toLowerCase();
-        if (u) commentsCountByUser.set(u, (commentsCountByUser.get(u) || 0) + 1);
+        if (u) {
+          commentsCountByUser.set(u, (commentsCountByUser.get(u) || 0) + 1);
+          const text = (iText >= 0 ? (commentsRows[i][iText] || '').trim() : '');
+          if (text) {
+            const arr = commentsTextsByUser.get(u) || [];
+            arr.push(text);
+            commentsTextsByUser.set(u, arr);
+          }
+        }
       }
     }
 
@@ -1086,6 +1105,7 @@ router.get('/distribucion-comentadores-red', (req, res) => {
           followsCount: follows,
           postsCount: (posts === 0 || isNaN(posts)) ? 1 : posts,
           commentsCount,
+          commentsTexts: commentsTextsByUser.get(user) || [],
           followsCamilo,
           private: toBool(p.private),
           isBusinessAccount: toBool(p.isBusinessAccount),

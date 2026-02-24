@@ -101,6 +101,52 @@
         const diamMax = 50;
         const sizeref = (2 * maxComments) / (diamMax * diamMax);
 
+        const WRAP_WIDTH = 48;
+        function escHtml(s) {
+          return String(s || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/\n/g, ' ');
+        }
+        function wrapToWidth(text) {
+          const t = text.trim();
+          if (!t) return '';
+          const parts = [];
+          let rest = t;
+          while (rest.length > 0) {
+            if (rest.length <= WRAP_WIDTH) {
+              parts.push(rest);
+              break;
+            }
+            let cut = rest.slice(0, WRAP_WIDTH);
+            const lastSpace = cut.lastIndexOf(' ');
+            if (lastSpace > WRAP_WIDTH / 2) cut = cut.slice(0, lastSpace);
+            parts.push(cut);
+            rest = rest.slice(cut.length).trim();
+          }
+          return parts.join('<br>');
+        }
+        function tooltipText(d) {
+          const lines = [
+            (d.fullName || '—') + '<br>@' + d.username,
+            'Seguidores: ' + (d.followersCount || 0).toLocaleString(),
+            'Seguidos: ' + (d.followsCount || 0).toLocaleString(),
+            'Comentarios: ' + (d.commentsCount || 0),
+            d.followsCamilo ? '✓ Sigue a Camilo' : '✗ No sigue'
+          ];
+          const texts = d.commentsTexts || [];
+          if (texts.length) {
+            lines.push('<br><b>Textos de los comentarios:</b>');
+            texts.forEach((c, i) => {
+              const safe = escHtml(c);
+              const wrapped = wrapToWidth(safe);
+              lines.push((i + 1) + '. ' + wrapped);
+            });
+          }
+          return lines.join('<br>');
+        }
         const trace = (arr, name, color) => ({
           x: arr.map(d => d.follows_plot),
           y: arr.map(d => d.followers_plot),
@@ -115,9 +161,7 @@
             line: { width: 0.5, color: 'white' },
             color
           },
-          text: arr.map(d =>
-            `${d.fullName || '—'}<br>@${d.username}<br>Seguidores: ${(d.followersCount || 0).toLocaleString()}<br>Seguidos: ${(d.followsCount || 0).toLocaleString()}<br>Comentarios: ${d.commentsCount || 0}<br>${d.followsCamilo ? '✓ Sigue a Camilo' : '✗ No sigue'}`
-          ),
+          text: arr.map(d => tooltipText(d)),
           hoverinfo: 'text'
         });
 
@@ -137,7 +181,12 @@
           autosize: true,
           showlegend: true,
           legend: { title: { text: 'En la red', font: { color: '#1f2937' } }, font: { color: '#374151' }, yanchor: 'top', y: 1, xanchor: 'left', x: 1.02, itemsizing: 'constant', itemwidth: 40 },
-          margin: { t: 50, r: 150, b: 90, l: 70 }
+          margin: { t: 50, r: 150, b: 90, l: 70 },
+          hoverlabel: {
+            bgcolor: '#ffffff',
+            bordercolor: 'rgba(0,0,0,0.2)',
+            font: { size: 12, color: '#1f2937', family: 'sans-serif' }
+          }
         };
 
         Plotly.newPlot(CONTAINER_ID, traces, layout, { responsive: true, scrollZoom: true, displayModeBar: true, useResizeHandler: true });

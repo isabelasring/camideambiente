@@ -66,6 +66,53 @@
       chartEl.innerHTML = '<p style="color:rgba(255,255,255,0.8);padding:2rem;">No hay comentarios para este post.</p>';
       return;
     }
+    const WRAP_WIDTH = 48;
+    function escHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, ' ');
+    }
+    function wrapToWidth(text) {
+      const t = text.trim();
+      if (!t) return '';
+      const parts = [];
+      let rest = t;
+      while (rest.length > 0) {
+        if (rest.length <= WRAP_WIDTH) {
+          parts.push(rest);
+          break;
+        }
+        let cut = rest.slice(0, WRAP_WIDTH);
+        const lastSpace = cut.lastIndexOf(' ');
+        if (lastSpace > WRAP_WIDTH / 2) cut = cut.slice(0, lastSpace);
+        parts.push(cut);
+        rest = rest.slice(cut.length).trim();
+      }
+      return parts.join('<br>');
+    }
+    function tooltipText(d) {
+      const lines = [
+        (d.fullName || '—') + '<br>@' + d.username,
+        'Seguidores: ' + (d.followersCount || 0).toLocaleString(),
+        'Seguidos: ' + (d.followsCount || 0).toLocaleString(),
+        'Comentarios en este post: ' + (d.commentsInPost || 0),
+        d.followsCamilo ? '✓ Sigue a Camilo' : '✗ No sigue'
+      ];
+      const texts = d.commentsTexts || [];
+      if (texts.length) {
+        lines.push('<br><b>Textos de los comentarios:</b>');
+        texts.forEach((c, i) => {
+          const safe = escHtml(c);
+          const wrapped = wrapToWidth(safe);
+          lines.push((i + 1) + '. ' + wrapped);
+        });
+      }
+      return lines.join('<br>');
+    }
+
     const sigue = data.filter(d => d.followsCamilo);
     const noSigue = data.filter(d => !d.followsCamilo);
     const maxComments = Math.max(1, ...data.map(d => d.commentsInPost || 1));
@@ -85,9 +132,7 @@
         line: { width: 0.5, color: 'white' },
         color
       },
-      text: arr.map(d =>
-        `${d.fullName || '—'}<br>@${d.username}<br>Seguidores: ${(d.followersCount || 0).toLocaleString()}<br>Seguidos: ${(d.followsCount || 0).toLocaleString()}<br>Comentarios en este post: ${d.commentsInPost || 0}<br>${d.followsCamilo ? '✓ Sigue a Camilo' : '✗ No sigue'}`
-      ),
+      text: arr.map(d => tooltipText(d)),
       hoverinfo: 'text'
     });
     const traces = [
@@ -104,7 +149,12 @@
       height: 400,
       showlegend: true,
       legend: { font: { color: '#374151' }, itemsizing: 'constant', itemwidth: 40 },
-      margin: { t: 40, r: 80, b: 60, l: 60 }
+      margin: { t: 40, r: 80, b: 60, l: 60 },
+      hoverlabel: {
+        bgcolor: '#ffffff',
+        bordercolor: 'rgba(0,0,0,0.2)',
+        font: { size: 12, color: '#1f2937', family: 'sans-serif' }
+      }
     };
     Plotly.newPlot(chartId, traces, layout, { responsive: true, scrollZoom: true, displayModeBar: true });
   }
@@ -119,9 +169,11 @@
       if (ex) ex.style.display = 'none';
       if (ch && typeof Plotly !== 'undefined') Plotly.purge(ch.id);
       w.querySelector('.post-item')?.classList.remove('post-item-active');
+      w.classList.remove('post-item-wrapper-expanded');
     });
     expand.style.display = 'block';
     wrapper.querySelector('.post-item')?.classList.add('post-item-active');
+    wrapper.classList.add('post-item-wrapper-expanded');
     chartEl.innerHTML = '';
     expand.querySelectorAll('.btn-ver-post, .btn-download-followers, .btn-download-no-followers').forEach(b => { b.style.display = 'none'; });
     expand.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -144,6 +196,7 @@
     if (expand) expand.style.display = 'none';
     if (chartEl && typeof Plotly !== 'undefined') Plotly.purge(chartEl.id);
     wrapper?.querySelector('.post-item')?.classList.remove('post-item-active');
+    wrapper?.classList.remove('post-item-wrapper-expanded');
   }
 
   function render(data) {

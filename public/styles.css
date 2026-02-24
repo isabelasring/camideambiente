@@ -1394,9 +1394,14 @@ body {
 }
 
 .post-item.post-item-active {
-    background: rgba(228, 64, 95, 0.2);
-    border-color: rgba(228, 64, 95, 0.5);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
+.post-item.post-item-active .post-title,
+.post-item.post-item-active .post-value { color: #1f2937; }
+.post-item.post-item-active .post-meta,
+.post-item.post-item-active .post-change { color: #6b7280; }
 
 /* Expandible posts (debajo de cada card) */
 .post-item-expand {
@@ -1406,6 +1411,23 @@ body {
     border-radius: 12px;
     border: 1px solid var(--glass-border);
     animation: expandIn 0.3s ease;
+}
+
+/* Contenedor de la gráfica resaltado cuando está desplegado */
+.post-item-wrapper-expanded .post-item-expand {
+    background: rgba(255, 255, 255, 0.98);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.post-item-wrapper-expanded .post-item-expand .posts-expand-subtitle {
+    color: #374151 !important;
+}
+.post-item-wrapper-expanded .post-expand-buttons .btn {
+    color: #1f2937;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+.post-item-wrapper-expanded .post-expand-buttons .btn:hover {
+    background: rgba(0, 0, 0, 0.08);
 }
 
 .post-item-expand .post-item-expand-chart {
