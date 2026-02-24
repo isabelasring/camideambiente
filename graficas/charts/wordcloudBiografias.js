@@ -1,7 +1,7 @@
 /**
  * Word cloud: biografías de perfiles
  * Fuente: perfilesSeguidores.json
- * Mode total: todos | Mode sesgo: 500-5000 seguidores
+ * Mode total: todos | Mode acotado: 500-5000 seguidores
  */
 (function() {
   'use strict';

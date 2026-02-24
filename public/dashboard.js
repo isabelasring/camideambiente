@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (viewId === 'profiles') {
                 if (window.ChartDistribucionUsuariosComentarios && window.ChartDistribucionUsuariosComentarios.init) window.ChartDistribucionUsuariosComentarios.init();
                 if (window.ChartDistribucionUsuariosComentariosFiltrado && window.ChartDistribucionUsuariosComentariosFiltrado.init) window.ChartDistribucionUsuariosComentariosFiltrado.init();
+                if (window.ChartEmojisComentarios && window.ChartEmojisComentarios.update) {
+                    requestAnimationFrame(() => { setTimeout(() => window.ChartEmojisComentarios.update(), 100); });
+                }
                 if (typeof Plotly !== 'undefined') {
                     requestAnimationFrame(() => {
                         setTimeout(() => {

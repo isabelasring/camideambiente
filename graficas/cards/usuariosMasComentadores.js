@@ -7,7 +7,6 @@
 
   const API_URL = '/api/metrics/usuarios-mas-comentadores';
   const CONTAINER_ID = 'usuariosMasComentadoresList';
-  const BADGE_ID = 'usuariosComentadoresBadge';
   const SEARCH_ID = 'usuariosComentadoresSearch';
 
   let allData = [];
@@ -24,14 +23,12 @@
 
   function render(data, searchTerm) {
     const list = document.getElementById(CONTAINER_ID);
-    const badge = document.getElementById(BADGE_ID);
     if (!list) return;
     let toShow = data || [];
     if (searchTerm) {
       const q = searchTerm.toLowerCase().replace(/^@/, '').trim();
       toShow = toShow.filter(u => (u.username || '').toLowerCase().includes(q));
     }
-    if (badge) badge.textContent = toShow.length ? toShow.length + ' usuarios' : (data?.length ? '0 de ' + data.length : '—');
     if (!toShow.length) {
       list.innerHTML = '<p style="color:rgba(255,255,255,0.7);">' + (data?.length ? 'Ningún usuario coincide con la búsqueda.' : 'No hay datos.') + '</p>';
       return;

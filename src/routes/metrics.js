@@ -324,6 +324,58 @@ router.get('/emojis-captions', (req, res) => {
 });
 
 /**
+ * GET /api/metrics/emojis-comentarios
+ * Extrae y cuenta emojis del texto de commentsPopularPosts.csv (columna text)
+ * Devuelve top 15 emojis más usados en comentarios
+ */
+router.get('/emojis-comentarios', (req, res) => {
+  try {
+    const commentsPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
+    if (!fs.existsSync(commentsPath)) {
+      return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
+    }
+    const content = fs.readFileSync(commentsPath, 'utf8');
+    const rows = parseCSV(content);
+    if (rows.length < 2) return res.json({ emojis: [], total: 0 });
+    const headers = rows[0].map(h => (h || '').toLowerCase().trim());
+    const iText = headers.indexOf('text');
+    if (iText < 0) return res.json({ emojis: [], total: 0 });
+
+    const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{200D}]|[\u{FE0F}]/gu;
+    const emojiCount = {};
+    for (let i = 1; i < rows.length; i++) {
+      const text = (rows[i][iText] || '').trim();
+      const emojis = text.match(emojiRegex);
+      if (emojis) {
+        emojis.forEach(emoji => {
+          const normalized = emoji.replace(/\u{FE0F}/gu, '').trim();
+          if (normalized) emojiCount[normalized] = (emojiCount[normalized] || 0) + 1;
+        });
+      }
+    }
+    function toCodePoint(str) {
+      const codes = [];
+      for (let i = 0; i < str.length; i++) {
+        const cp = str.codePointAt(i);
+        if (cp != null) {
+          codes.push(cp.toString(16).toUpperCase());
+          if (cp > 0xFFFF) i++;
+        }
+      }
+      return codes.join('-');
+    }
+    const emojis = Object.entries(emojiCount)
+      .map(([emoji, count]) => ({ emoji, count, codepoint: toCodePoint(emoji) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+    return res.json({ emojis, total: rows.length - 1 });
+  } catch (err) {
+    console.error('Error emojis-comentarios:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/metrics/wordcloud-captions
  * Procesa captions de hashtags.json y devuelve palabras filtradas con stopword
  */
@@ -758,17 +810,33 @@ router.get('/wordcloud-biografias', (req, res) => {
 /**
  * GET /api/metrics/wordcloud-biografias-comentarios
  * Fuente: profileUsersComments.json (usuarios que comentaron)
- * mode=total: todas las biografías
- * mode=sesgo: solo perfiles 200-4000 seguidores
+ * mode=total: todas las biografías | mode=sesgo: solo perfiles 200-4000 seguidores
+ * follows=all|yes|no: filtrar por si siguen o no a Camilo (seguidoresCamilo.csv)
  */
 router.get('/wordcloud-biografias-comentarios', (req, res) => {
   try {
     const jsonPath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    const seguidoresPath = path.join(CSVJSON_PATH, 'seguidoresCamilo.csv');
     if (!fs.existsSync(jsonPath)) {
       return res.status(404).json({ error: 'profileUsersComments no encontrado' });
     }
     const raw = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    const profiles = Array.isArray(raw) ? raw : [];
+    let profiles = Array.isArray(raw) ? raw : [];
+
+    const followsFilter = (req.query.follows || 'all').toLowerCase();
+    if (followsFilter !== 'all' && fs.existsSync(seguidoresPath)) {
+      const segRows = parseCSV(fs.readFileSync(seguidoresPath, 'utf8'));
+      const segHeaders = segRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+      const iUser = segHeaders.indexOf('username');
+      const sigueSet = new Set();
+      for (let i = 1; i < segRows.length; i++) {
+        const u = (segRows[i][iUser] || '').trim().toLowerCase();
+        if (u) sigueSet.add(u);
+      }
+      if (followsFilter === 'yes') profiles = profiles.filter(p => sigueSet.has((p.username || '').trim().toLowerCase()));
+      if (followsFilter === 'no') profiles = profiles.filter(p => !sigueSet.has((p.username || '').trim().toLowerCase()));
+    }
+
     const mode = (req.query.mode || 'sesgo').toLowerCase();
     const filtered = mode === 'total'
       ? profiles
