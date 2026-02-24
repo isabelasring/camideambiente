@@ -275,55 +275,177 @@ router.get('/usuarios-mas-comentadores', (req, res) => {
 });
 
 /**
+ * GET /api/metrics/emojis-captions
+ * Extrae y cuenta emojis de los captions de hashtags.json
+ * Sin filtros - muestra top 10 emojis de todos los datos
+ */
+router.get('/emojis-captions', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'hashtags.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'hashtags.json no encontrado' });
+    }
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (!Array.isArray(jsonData) || jsonData.length === 0) {
+      return res.json({ emojis: [] });
+    }
+
+    // Expresión regular para detectar emojis (incluye emojis Unicode)
+    const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{200D}]|[\u{FE0F}]/gu;
+
+    // Contar emojis de todos los datos (sin filtros)
+    const emojiCount = {};
+    
+    jsonData.forEach(item => {
+      const caption = item.caption || '';
+      const emojis = caption.match(emojiRegex);
+      if (emojis) {
+        emojis.forEach(emoji => {
+          // Normalizar emojis (algunos tienen variantes de color o modificadores)
+          const normalized = emoji.replace(/\u{FE0F}/gu, '').trim();
+          if (normalized) {
+            emojiCount[normalized] = (emojiCount[normalized] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    // Convertir a array y ordenar por frecuencia - Top 10
+    const emojis = Object.entries(emojiCount)
+      .map(([emoji, count]) => ({ emoji, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // Top 10 emojis
+
+    return res.json({ emojis, total: jsonData.length });
+  } catch (err) {
+    console.error('Error emojis-captions:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/metrics/wordcloud-captions
+ * Procesa captions de hashtags.json y devuelve palabras filtradas con stopword
+ */
+router.get('/wordcloud-captions', (req, res) => {
+  try {
+    const jsonPath = path.join(CSVJSON_PATH, 'hashtags.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'hashtags.json no encontrado' });
+    }
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (!Array.isArray(jsonData) || jsonData.length === 0) {
+      return res.json({ list: [] });
+    }
+
+    // Aplicar filtros si vienen en query params
+    let filteredData = jsonData;
+    const keyword = (req.query.keyword || '').trim();
+    const dateFrom = req.query.dateFrom;
+    const dateTo = req.query.dateTo;
+    const likesMin = req.query.likesMin;
+
+    if (keyword || dateFrom || dateTo || likesMin) {
+      filteredData = jsonData.filter(item => {
+        if (keyword) {
+          const keywordLower = keyword.toLowerCase();
+          const captionMatch = (item.caption || '').toLowerCase().includes(keywordLower);
+          const hashtagsMatch = (item.hashtags || []).some(h => h.toLowerCase().includes(keywordLower));
+          if (!captionMatch && !hashtagsMatch) return false;
+        }
+        if (dateFrom) {
+          const dateFromObj = new Date(dateFrom);
+          const postDate = new Date(item.timestamp);
+          if (postDate < dateFromObj) return false;
+        }
+        if (dateTo) {
+          const dateToObj = new Date(dateTo);
+          dateToObj.setHours(23, 59, 59, 999);
+          const postDate = new Date(item.timestamp);
+          if (postDate > dateToObj) return false;
+        }
+        if (likesMin) {
+          const minLikes = parseInt(likesMin, 10) || 0;
+          if ((item.likesCount || 0) < minLikes) return false;
+        }
+        return true;
+      });
+    }
+
+    // Extraer todos los captions
+    const allText = filteredData
+      .map(item => (item.caption || '').trim())
+      .filter(Boolean)
+      .join(' ');
+
+    if (!allText) {
+      return res.json({ list: [] });
+    }
+
+    // Procesar texto: convertir a minúsculas y limpiar
+    const rawWords = allText
+      .toLowerCase()
+      .replace(/[^a-záéíóúñü0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !/^\d+$/.test(w)); // Filtrar palabras muy cortas y solo números
+
+    // Usar stopword para filtrar
+    const STOPWORDS = [...spa, ...eng, ...fra, ...por];
+    const words = removeStopwords(rawWords, STOPWORDS);
+
+    // Contar frecuencia
+    const wordCount = {};
+    words.forEach(word => {
+      wordCount[word] = (wordCount[word] || 0) + 1;
+    });
+
+    // Convertir a array y ordenar
+    const list = Object.entries(wordCount)
+      .map(([word, count]) => [word, count])
+      .sort((a, b) => b[1] - a[1]);
+
+    return res.json({ list, total: filteredData.length });
+  } catch (err) {
+    console.error('Error wordcloud-captions:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/metrics/hashtags
- * Datos de hashtags.csv para gráfica de distribución por fecha y hora
+ * Datos de hashtags.json para gráfica de distribución por fecha y hora
  */
 router.get('/hashtags', (req, res) => {
   try {
-    const csvPath = path.join(CSVJSON_PATH, 'hashtags.csv');
-    if (!fs.existsSync(csvPath)) {
-      return res.status(404).json({ error: 'hashtags.csv no encontrado' });
+    const jsonPath = path.join(CSVJSON_PATH, 'hashtags.json');
+    if (!fs.existsSync(jsonPath)) {
+      return res.status(404).json({ error: 'hashtags.json no encontrado' });
     }
-    let content = fs.readFileSync(csvPath, 'utf8');
-    content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/^\uFEFF/, '');
-    const rows = parseCSV(content);
-    if (rows.length < 2) return res.json({ data: [] });
-
-    const headers = rows[0].map(h => (h || '').trim().toLowerCase());
-    const idx = (name) => headers.indexOf(name);
-    const iCaption = idx('caption') >= 0 ? idx('caption') : 0;
-    const iOwnerFull = idx('ownerfullname') >= 0 ? idx('ownerfullname') : 1;
-    const iOwnerUser = idx('ownerusername') >= 0 ? idx('ownerusername') : 2;
-    const iUrl = idx('url') >= 0 ? idx('url') : 3;
-    const iComments = idx('commentscount') >= 0 ? idx('commentscount') : 4;
-    const iLikes = idx('likescount') >= 0 ? idx('likescount') : 6;
-    const iTimestamp = idx('timestamp') >= 0 ? idx('timestamp') : 7;
-    const iQueryTag = idx('querytag') >= 0 ? idx('querytag') : 8;
+    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (!Array.isArray(jsonData) || jsonData.length === 0) {
+      return res.json({ data: [] });
+    }
 
     const data = [];
-    for (let i = 1; i < rows.length; i++) {
-      const r = rows[i];
-      const ts = (r[iTimestamp] || '').trim();
+    for (const item of jsonData) {
+      const ts = (item.timestamp || '').trim();
       if (!ts) continue;
       const d = new Date(ts);
       if (isNaN(d.getTime())) continue;
       const dateStr = d.toISOString().split('T')[0];
       const timeStr = d.toTimeString().slice(0, 5);
-      const hashtags = [];
-      for (let k = 0; k < 29; k++) {
-        const j = headers.indexOf('hashtags/' + k);
-        if (j >= 0 && r[j]) hashtags.push(String(r[j]).trim());
-      }
+      
       data.push({
-        caption: (r[iCaption] || '').replace(/\s+/g, ' ').trim().substring(0, 300),
-        ownerFullName: (r[iOwnerFull] || '').trim(),
-        ownerUsername: (r[iOwnerUser] || '').trim(),
-        url: (r[iUrl] || '').trim(),
-        commentsCount: parseInt(r[iComments], 10) || 0,
-        likesCount: parseInt(r[iLikes], 10) || 0,
+        caption: (item.caption || '').replace(/\s+/g, ' ').trim().substring(0, 300),
+        ownerFullName: (item.ownerFullName || '').trim(),
+        ownerUsername: (item.ownerUsername || '').trim(),
+        url: (item.url || '').trim(),
+        commentsCount: parseInt(item.commentsCount, 10) || 0,
+        likesCount: parseInt(item.likesCount, 10) || 0,
         timestamp: ts,
-        queryTag: (r[iQueryTag] || '').trim(),
-        hashtags: hashtags.filter(Boolean),
+        hashtags: Array.isArray(item.hashtags) ? item.hashtags : [],
         dateStr,
         timeStr,
         dateNum: d.getTime()
