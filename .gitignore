@@ -33,3 +33,8 @@ build/
 # Temporary files
 tmp/
 temp/
+
+# Archivos geo muy grandes (límite GitHub 100 MB)
+Clasificacion_Marco_Comercio/Clasificacion_Marco_Comercio.geojson
+Clasificacion_Marco_Comercio/Clasificacion_Marco_Comercio.json
+Clasificacion_Marco_Comercio/Clasificacion_Ruido_Quejas.geojson

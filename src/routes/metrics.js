@@ -505,17 +505,19 @@ router.get('/perfiles-analizados', (req, res) => {
 
 /**
  * GET /api/metrics/comments-analizados
- * Cuenta desde commentsPopularPosts.csv (cada fila = 1 comentario)
+ * Cuenta filas desde commentsPopularPosts.csv (cada fila = 1 comentario). Usa parseCSV para CSV con comillas/saltos de línea.
  */
 router.get('/comments-analizados', (req, res) => {
   try {
     const csvPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
-    if (fs.existsSync(csvPath)) {
-      const content = fs.readFileSync(csvPath, 'utf8');
-      const lines = content.trim().split('\n').filter(l => l.trim());
-      return res.json({ count: Math.max(0, lines.length - 1), source: 'commentsPopularPosts.csv' });
+    if (!fs.existsSync(csvPath)) {
+      return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
     }
-    return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
+    let content = fs.readFileSync(csvPath, 'utf8');
+    content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/^\uFEFF/, '');
+    const rows = parseCSV(content);
+    const count = Math.max(0, rows.length - 1);
+    return res.json({ count, source: 'commentsPopularPosts.csv' });
   } catch (err) {
     console.error('Error comments-analizados:', err);
     return res.status(500).json({ error: err.message });

@@ -38,6 +38,8 @@
                         <button type="button" class="sidebar-subitem active" data-tab="followers">followers</button>
                         <button type="button" class="sidebar-subitem" data-tab="profiles">comments</button>
                         <button type="button" class="sidebar-subitem" data-tab="posts">hashtags</button>
+                        <button type="button" class="sidebar-subitem" data-tab="comments-analysis">Comment analysis</button>
+                        <button type="button" class="sidebar-subitem" data-tab="capas">Capas</button>
                         <button type="button" class="sidebar-subitem" data-tab="images">images</button>
                     </div>
                 </div>
@@ -108,7 +110,7 @@
 
                 <div class="metric-card glass" data-card-id="card-perfiles-analizados">
                     <div class="metric-header">
-                        <span class="metric-label">PROFILES ANALYZED</span>
+                        <span class="metric-label">Perfiles analizados</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
@@ -121,7 +123,7 @@
 
                 <div class="metric-card glass" data-card-id="card-posts-analizados">
                     <div class="metric-header">
-                        <span class="metric-label">POSTS ANALYZED</span>
+                        <span class="metric-label">Posts analizados</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="3" y1="9" x2="21" y2="9"></line>
@@ -133,7 +135,7 @@
 
                 <div class="metric-card glass" data-card-id="card-comments-analizados">
                     <div class="metric-header">
-                        <span class="metric-label">COMMENTS ANALYZED</span>
+                        <span class="metric-label">Comentarios analizados</span>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
@@ -579,6 +581,32 @@
                     </div>
                 </div>
             </div><!-- /hashtags -->
+
+            <!-- Vista Comment analysis -->
+            <div class="dashboard-view" data-view="comments-analysis" style="display:none;">
+                <div class="chart-card glass" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3>Comment analysis</h3>
+                        <p class="chart-subtitle">Análisis de sentimiento y engagement de los comentarios en posts virales.</p>
+                    </div>
+                    <div class="chart-canvas-wrap" style="min-height:300px;padding:2rem;">
+                        <p style="color:rgba(255,255,255,0.8);">Contenido del análisis de comentarios (próximamente).</p>
+                    </div>
+                </div>
+            </div><!-- /Comment analysis -->
+
+            <!-- Vista Capas -->
+            <div class="dashboard-view" data-view="capas" style="display:none;">
+                <div class="chart-card glass" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3>Capas</h3>
+                        <p class="chart-subtitle">Gestión y visualización de capas.</p>
+                    </div>
+                    <div class="chart-canvas-wrap" style="min-height:300px;padding:2rem;">
+                        <p style="color:rgba(255,255,255,0.8);">Contenido de capas (próximamente).</p>
+                    </div>
+                </div>
+            </div><!-- /Capas -->
 
         </main>
     </div>
