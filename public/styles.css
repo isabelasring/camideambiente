@@ -14,6 +14,12 @@
     --glass-border: rgba(255, 255, 255, 0.15);
     --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
     --white-hover: rgba(255, 255, 255, 0.1);
+    --geodatos-map-height: clamp(240px, 34dvh, 360px);
+    --geodatos-map-height-active: clamp(220px, 30dvh, 320px);
+    --geodatos-map-height-tablet: clamp(200px, 28dvh, 280px);
+    --geodatos-map-height-active-tablet: clamp(190px, 25dvh, 260px);
+    --geodatos-map-height-mobile: clamp(180px, 24dvh, 230px);
+    --geodatos-map-height-active-mobile: clamp(170px, 22dvh, 220px);
 }
 
 body {
@@ -171,6 +177,12 @@ body {
     padding: 2rem;
     max-width: 1600px;
     margin: 0 auto;
+}
+
+.main-content.is-geodatos-active {
+    padding: 0;
+    max-width: none;
+    margin: 0;
 }
 
 /* Barra de navegación superior (ya no se usa, mantener por compatibilidad) */
@@ -469,8 +481,9 @@ body {
 
 .chart-card {
     padding: 1.5rem;
-    min-height: 420px;
+    min-height: 98vh;
     overflow: hidden;
+    margin: 1rem;
 }
 
 .chart-header {
@@ -603,6 +616,689 @@ body {
     color: white;
 }
 
+.geodatos-toolbar {
+    padding: 0 1.5rem 0.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.geodatos-toolbar-top {
+    padding-bottom: 0.25rem;
+}
+
+.geodatos-layer-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.geodatos-layer-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.geodatos-layer-btn.is-active {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.geodatos-layer-btn.is-loading {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.geodatos-status {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+    min-height: 1.25rem;
+}
+
+.geodatos-bottom-panel {
+    display: grid;
+    grid-template-columns: minmax(180px, 20%) minmax(0, 1fr);
+    gap: 1rem;
+    padding: 0 1.5rem 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.geodatos-bottom-col {
+    min-width: 0;
+}
+
+.geodatos-bottom-col-filters {
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding-right: 0.75rem;
+}
+
+.geodatos-bottom-col-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    min-width: 0;
+}
+
+.geodatos-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+}
+
+.geodatos-date-range {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+}
+
+.geodatos-date-range-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.82rem;
+}
+
+.geodatos-date-range-slider-single {
+    position: relative;
+    height: 68px;
+    display: flex;
+    align-items: center;
+}
+
+.geodatos-date-range-month-grid {
+    position: absolute;
+    inset: 14px 0 0 0;
+    pointer-events: none;
+}
+
+.geodatos-date-range-month-tick {
+    position: absolute;
+    top: 0;
+    bottom: 18px;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.geodatos-date-range-month-label {
+    position: absolute;
+    bottom: 0;
+    transform: translateX(-50%);
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+}
+
+.geodatos-date-range-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 26px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    pointer-events: none;
+}
+
+.geodatos-date-range-fill {
+    position: absolute;
+    top: 26px;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #06d6a0, #00b4d8);
+    pointer-events: none;
+    left: 0%;
+    width: 0%;
+}
+
+.geodatos-date-handle-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    background: rgba(10, 10, 10, 0.95);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.72rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.geodatos-date-handle-label::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: rgba(10, 10, 10, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    rotate: 45deg;
+}
+
+.geodatos-date-range-slider-single input[type="range"] {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 21px;
+    width: 100%;
+    height: 16px;
+    margin: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: none;
+}
+
+.geodatos-date-range-slider-single input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    background: transparent;
+    border: none;
+}
+
+.geodatos-date-range-slider-single input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: transparent;
+    border: none;
+}
+
+.geodatos-date-range-slider-single input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #06d6a0;
+    border: 2px solid rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+    margin-top: -5px;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.geodatos-date-range-slider-single input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #06d6a0;
+    border: 2px solid rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.geodatos-date-range-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.geodatos-indicators {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.geodatos-indicators-note {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.76rem;
+}
+
+.geodatos-table-wrap {
+    width: 100%;
+    overflow: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.geodatos-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    color: #fff;
+}
+
+.geodatos-table th,
+.geodatos-table td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.geodatos-table th:first-child,
+.geodatos-table td:first-child {
+    text-align: left;
+}
+
+.geodatos-table thead th {
+    position: sticky;
+    top: 0;
+    background: rgba(12, 12, 12, 0.96);
+    z-index: 1;
+    font-weight: 700;
+}
+
+.geodatos-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.geodatos-filters-title {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.geodatos-filter-buttons {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    align-items: flex-start;
+}
+
+.geodatos-filter-select-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.geodatos-filter-select-label {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.75rem;
+}
+
+.geodatos-filter-select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.geodatos-filter-select:hover,
+.geodatos-filter-select:focus {
+    border-color: rgba(255, 255, 255, 0.32);
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.geodatos-filter-select option {
+    background: #151515;
+    color: #fff;
+}
+
+.geodatos-filter-btn {
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.geodatos-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.geodatos-filter-btn.is-active {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+}
+
+.geodatos-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding-top: 0.15rem;
+}
+
+.geodatos-map-legend-overlay {
+    position: absolute;
+    left: 0.35rem;
+    bottom: 0.35rem;
+    z-index: 450;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: fit-content;
+    max-width: min(420px, calc(100% - 0.7rem));
+    height: auto;
+    min-height: 0;
+    background: rgba(12, 12, 12, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 0.35rem 0.45rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Evita que la regla global de chart-canvas-wrap expanda la leyenda al tamaño completo del mapa */
+.chart-canvas-wrap > .geodatos-map-legend-overlay {
+    width: fit-content !important;
+    height: auto !important;
+}
+
+.geodatos-map-legend-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.geodatos-map-legend-toggle {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 0.95rem;
+}
+
+.geodatos-map-legend-toggle:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.geodatos-map-legend-body {
+    margin-top: 0.3rem;
+    width: auto;
+}
+
+.geodatos-map-legend-overlay.is-collapsed .geodatos-map-legend-body {
+    display: none;
+}
+
+.geodatos-legend-title {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.geodatos-legend-items {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.geodatos-map-legend-overlay .geodatos-legend-items {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.4rem;
+    align-items: flex-start;
+}
+
+.geodatos-legend-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.22rem;
+    width: auto;
+    min-width: 0;
+}
+
+.geodatos-legend-group-title {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding-left: 0.1rem;
+    text-transform: none;
+}
+
+.geodatos-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 0.18rem 0.45rem 0.18rem 0.28rem;
+}
+
+.geodatos-legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    box-shadow: none;
+    flex: 0 0 auto;
+}
+
+.geodatos-card {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - 4rem);
+}
+
+.main-content.is-geodatos-active .dashboard-view[data-view="geodatos"] {
+    height: 100%;
+}
+
+.main-content.is-geodatos-active .geodatos-card {
+    min-height: 100dvh;
+    border-radius: 0;
+    padding: 0;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.main-content.is-geodatos-active .geodatos-card .chart-header {
+    padding: 1rem 1rem 0.5rem 1rem;
+    margin: 0;
+}
+
+.main-content.is-geodatos-active .geodatos-toolbar {
+    padding: 0 1rem 0.5rem 1rem;
+}
+
+.main-content.is-geodatos-active .geodatos-bottom-panel {
+    padding: 0.5rem 1rem 0.85rem 1rem;
+    gap: 0.7rem;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.geodatos-map-wrap {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    position: relative;
+}
+
+.main-content.is-geodatos-active .geodatos-map-wrap {
+    padding: 0 !important;
+    margin: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.main-content.is-geodatos-active .chart-canvas-wrap.geodatos-map-wrap {
+    min-height: 0;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
+    margin: 0;
+}
+
+.geodatos-map {
+    width: 100%;
+    height: 80vh;
+    min-height: 240px;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.main-content.is-geodatos-active .geodatos-map {
+    border-radius: 0;
+    height: var(--geodatos-map-height-active);
+    min-height: 60vh;
+}
+
+#geodatosMap .leaflet-control-layers,
+#geodatosMap .leaflet-popup-content-wrapper,
+#geodatosMap .leaflet-popup-tip {
+    background: rgba(18, 18, 18, 0.95);
+    color: #f5f5f5;
+}
+
+#geodatosMap .leaflet-control-layers {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+#geodatosMap .leaflet-control-layers label {
+    color: #f5f5f5;
+}
+
+#geodatosMap .geodatos-layer-control-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+#geodatosMap .geodatos-layer-control-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    flex: 0 0 auto;
+}
+
+#geodatosMap .leaflet-bar a {
+    background: rgba(18, 18, 18, 0.95);
+    color: #f5f5f5;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+#geodatosMap .leaflet-bar a:hover {
+    background: rgba(35, 35, 35, 0.95);
+}
+
+@media (max-width: 900px) {
+    .geodatos-card {
+        min-height: calc(100dvh - 2rem);
+    }
+
+    .geodatos-map {
+        height: var(--geodatos-map-height-tablet);
+        min-height: 200px;
+    }
+
+    .main-content.is-geodatos-active .geodatos-card {
+        min-height: 100dvh;
+    }
+
+    .main-content.is-geodatos-active .geodatos-map {
+        height: var(--geodatos-map-height-active-tablet);
+        min-height: 190px;
+    }
+
+    .geodatos-filter-buttons,
+    .geodatos-legend-items {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .geodatos-bottom-panel {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .geodatos-bottom-col-filters {
+        border-right: 0;
+        padding-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.6rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .geodatos-toolbar {
+        padding: 0 1rem 0.5rem 1rem;
+    }
+
+    .geodatos-map-wrap {
+        padding: 0.75rem 1rem 1rem 1rem !important;
+    }
+
+    .geodatos-map {
+        height: var(--geodatos-map-height-mobile);
+        min-height: 180px;
+        border-radius: 10px;
+    }
+
+    .geodatos-map-legend-overlay {
+        left: 0.35rem;
+        right: auto;
+        bottom: 0.35rem;
+        width: fit-content;
+        max-width: calc(100% - 0.7rem);
+        padding: 0.35rem 0.4rem;
+    }
+
+    .main-content.is-geodatos-active .geodatos-card .chart-header {
+        padding: 0.75rem 0.75rem 0.5rem 0.75rem;
+    }
+
+    .main-content.is-geodatos-active .geodatos-toolbar {
+        padding: 0 0.75rem 0.5rem 0.75rem;
+    }
+
+    .main-content.is-geodatos-active .geodatos-bottom-panel {
+        padding: 0.35rem 0.75rem 0.75rem 0.75rem;
+    }
+
+    .main-content.is-geodatos-active .geodatos-map {
+        height: var(--geodatos-map-height-active-mobile);
+        min-height: 170px;
+        border-radius: 0;
+    }
+
+    .geodatos-filter-buttons,
+    .geodatos-legend-items {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+    }
+
+    .geodatos-bottom-panel {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+    }
+
+    .geodatos-bottom-col-filters {
+        border-right: 0;
+        padding-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.5rem;
+    }
+}
+
 .chart-canvas-wrap {
     min-height: 420px;
     height: 420px;
@@ -622,6 +1318,13 @@ body {
 .chart-canvas-wrap canvas {
     max-width: 100%;
     max-height: 100%;
+}
+
+/* Leaflet usa canvas/svg propios; no deben heredar restricciones de charts */
+#geodatosMap canvas,
+#geodatosMap svg {
+    max-width: none !important;
+    max-height: none !important;
 }
 
 .chart-canvas-wrap-tall {

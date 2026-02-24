@@ -95,6 +95,7 @@ app.get('/', (req, res) => {
 
 app.use(express.static('public'));
 app.use('/graficas', express.static('graficas'));
+app.use('/geodatos', express.static('geodatos'));
 
 const routes = require('./routes');
 app.use(routes);

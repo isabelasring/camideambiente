@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geotrends - Analytics Dashboard | Camilo</title>
     <link rel="stylesheet" href="styles.css">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.2/wordcloud2.min.js"></script>
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin="">
+    </script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 </head>
 <body>
     <!-- Animación de fondo Luma AI -->
@@ -40,6 +52,7 @@
                         <button type="button" class="sidebar-subitem" data-tab="posts">hashtags</button>
                         <button type="button" class="sidebar-subitem" data-tab="comments-analysis">Comment analysis</button>
                         <button type="button" class="sidebar-subitem" data-tab="capas">Capas</button>
+                        <button type="button" class="sidebar-subitem" data-tab="geodatos">Geodatos</button>
                         <button type="button" class="sidebar-subitem" data-tab="images">images</button>
                     </div>
                 </div>
@@ -165,7 +178,7 @@
                 </div>
 
                 <!-- Filtros adicionales + Gráfica filtrada -->
-                <div class="chart-card glass" style="grid-column: 1 / -1;">
+                <div class="chart-card glass geodatos-card" style="grid-column: 1 / -1;">
                     <div class="chart-header chart-header-with-filters">
                         <div class="chart-header-left">
                             <h3>Filtrado: >500 seguidos, 500-5000 seguidores (tamaño = posts)</h3>
@@ -641,6 +654,97 @@
                     </div>
                 </div>
             </div><!-- /Capas -->
+
+            <!-- Vista Geodatos -->
+            <div class="dashboard-view" data-view="geodatos" style="display:none;">
+                <div class="chart-card glass" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3>Geodatos</h3>
+                        <p class="chart-subtitle">Mapa interactivo con 3 mapas base (OpenStreetMap, Carto Light y Satélite ESRI).</p>
+                    </div>
+                    <div class="geodatos-toolbar geodatos-toolbar-top">
+                        <div class="geodatos-layer-buttons" id="geodatosLayerButtons">
+                            <button type="button" class="btn btn-small geodatos-layer-btn" data-file="Airbnb.json">Airbnb 2025</button>
+                            <button type="button" class="btn btn-small geodatos-layer-btn" data-file="Hoteles.json">Hoteles</button>
+                            <button type="button" class="btn btn-small geodatos-layer-btn" data-file="Clasificacion_Marco_Comercio.geojson">Comercio (geojson)</button>
+                            <button type="button" class="btn btn-small geodatos-layer-btn" data-file="Clasificacion_Ruido_Quejas.geojson">Ruido Quejas</button>
+                            <button type="button" class="btn btn-small geodatos-layer-btn" data-file="SRCasignado_1.js">Airbnb 2024</button>
+                        </div>
+                        <div class="geodatos-status" id="geodatosStatus">Selecciona una capa para cargarla en el mapa.</div>
+                    </div>
+                    <div class="chart-canvas-wrap chart-canvas-wrap-tall geodatos-map-wrap" style="padding:1rem 1.5rem 1.5rem 1.5rem;">
+                        <div id="geodatosMap" class="geodatos-map"></div>
+                        <div class="geodatos-map-legend-overlay" id="geodatosLegend" style="display:none;">
+                            <div class="geodatos-map-legend-header">
+                                <div class="geodatos-legend-title" id="geodatosLegendTitle">Leyenda</div>
+                                <button type="button" class="geodatos-map-legend-toggle" id="geodatosLegendToggle" aria-expanded="true" title="Contraer leyenda">−</button>
+                            </div>
+                            <div class="geodatos-map-legend-body" id="geodatosLegendBody">
+                                <div class="geodatos-legend-items" id="geodatosLegendItems"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="geodatos-bottom-panel">
+                        <div class="geodatos-bottom-col geodatos-bottom-col-filters">
+                            <div class="geodatos-filters" id="geodatosFilters" style="display:none;">
+                                <div class="geodatos-filters-title" id="geodatosFiltersTitle">Filtros</div>
+                                <div class="geodatos-filter-select-wrap">
+                                    <label for="geodatosFilterLayerSelect" class="geodatos-filter-select-label">Capa para filtros</label>
+                                    <select id="geodatosFilterLayerSelect" class="geodatos-filter-select"></select>
+                                </div>
+                                <div class="geodatos-filter-select-wrap" id="geodatosVizModeWrap" style="display:none;">
+                                    <label for="geodatosVizModeSelect" class="geodatos-filter-select-label">Visualización</label>
+                                    <select id="geodatosVizModeSelect" class="geodatos-filter-select">
+                                        <option value="points">Puntos</option>
+                                        <option value="heatmap">Heatmap</option>
+                                    </select>
+                                </div>
+                                <div class="geodatos-filter-select-wrap">
+                                    <label for="geodatosFilterSelect" class="geodatos-filter-select-label">Filtro activo</label>
+                                    <select id="geodatosFilterSelect" class="geodatos-filter-select"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="geodatos-bottom-col geodatos-bottom-col-details">
+                            <div class="geodatos-date-range" id="geodatosDateRange" style="display:none;">
+                                <div class="geodatos-filters-title">Rango de fecha (Ruido Quejas)</div>
+                                <div class="geodatos-date-range-labels">
+                                    <span id="geodatosDateMinLabel">Desde: -</span>
+                                    <span id="geodatosDateMaxLabel">Hasta: -</span>
+                                </div>
+                                <div class="geodatos-date-range-slider-single">
+                                    <div class="geodatos-date-range-month-grid" id="geodatosDateMonthGrid"></div>
+                                    <div class="geodatos-date-range-track"></div>
+                                    <div class="geodatos-date-range-fill" id="geodatosDateRangeFill"></div>
+                                    <div class="geodatos-date-handle-label geodatos-date-handle-label-min" id="geodatosDateMinBubble">-</div>
+                                    <div class="geodatos-date-handle-label geodatos-date-handle-label-max" id="geodatosDateMaxBubble">-</div>
+                                    <input type="range" id="geodatosDateMin" min="0" max="100" value="0" step="1">
+                                    <input type="range" id="geodatosDateMax" min="0" max="100" value="100" step="1">
+                                </div>
+                                <div class="geodatos-date-range-actions">
+                                    <button type="button" class="btn btn-small" id="geodatosDateApply">Aplicar fecha</button>
+                                    <button type="button" class="btn btn-small" id="geodatosDateReset">Reset fecha</button>
+                                </div>
+                            </div>
+                            <div class="geodatos-indicators" id="geodatosIndicators" style="display:none;">
+                                <div class="geodatos-filters-title" id="geodatosIndicatorsTitle">Indicadores dinámicos</div>
+                                <div class="geodatos-filter-select-wrap" id="geodatosComercioGroupByWrap" style="max-width:320px;">
+                                    <label for="geodatosComercioGroupBy" class="geodatos-filter-select-label">Agrupar por</label>
+                                    <select id="geodatosComercioGroupBy" class="geodatos-filter-select">
+                                        <option value="desc_tamano_empresa">Tamaño de empresa</option>
+                                        <option value="Addr_type">Tipo de dirección</option>
+                                        <option value="categoria">Categoría jurídica</option>
+                                    </select>
+                                </div>
+                                <div class="geodatos-indicators-note" id="geodatosIndicatorsNote"></div>
+                                <div class="geodatos-table-wrap">
+                                    <table class="geodatos-table" id="geodatosComercioTable"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /Geodatos -->
 
         </main>
     </div>

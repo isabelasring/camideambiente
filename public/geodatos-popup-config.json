@@ -1,0 +1,73 @@
+{
+  "Hoteles.json": {
+    "fields": [
+      { "key": "FID", "label": "FID", "type": "integer" },
+      { "key": "id", "label": "ID interno", "type": "integer" },
+      { "key": "objectid", "label": "Object ID" },
+      { "key": "rnt", "label": "RNT" },
+      { "key": "nit", "label": "NIT" },
+      { "key": "razon_soci", "label": "Razón social" },
+      { "key": "nombre_est", "label": "Nombre del establecimiento" },
+      { "key": "correo_ele", "label": "Correo electrónico", "type": "email" },
+      { "key": "direcciãl", "label": "Dirección" },
+      { "key": "telefono", "label": "Teléfono" },
+      { "key": "ciudad", "label": "Ciudad" },
+      { "key": "departamen", "label": "Departamento" },
+      { "key": "cod_dpto", "label": "Código departamento" },
+      { "key": "cod_mpio", "label": "Código municipio" }
+    ]
+  },
+  "Clasificacion_Marco_Comercio.geojson": {
+    "fields": [
+      { "key": "Match_addr", "label": "Dirección geocodificada" },
+      { "key": "org_juridica", "label": "Organización jurídica" },
+      { "key": "categoria", "label": "Categoría" },
+      { "key": "fecha_matricula", "label": "Fecha de matrícula", "type": "date_iso" },
+      { "key": "razon_social", "label": "Razón social" },
+      { "key": "tipo_identificacion", "label": "Tipo de identificación" },
+      { "key": "numero_identificacion", "label": "Número de identificación", "type": "integer" },
+      { "key": "actividad_economica", "label": "Actividad económica principal" },
+      { "key": "actividad_economica2", "label": "Actividad económica 2" },
+      { "key": "actividad_economica3", "label": "Actividad económica 3" },
+      { "key": "desc_tamano_empresa", "label": "Tamaño de empresa" },
+      { "key": "departamento", "label": "Departamento" },
+      { "key": "municipio", "label": "Municipio" },
+      { "key": "direccion_comercial", "label": "Dirección comercial" },
+      { "key": "correo_comercial", "label": "Correo comercial", "type": "email" },
+      { "key": "rep_legal", "label": "Representante legal" },
+      { "key": "CIIU_1", "label": "CIIU 1" },
+      { "key": "CIIU_2", "label": "CIIU 2" },
+      { "key": "CIIU_3", "label": "CIIU 3" },
+      { "key": "CIIU_4", "label": "CIIU 4" },
+      { "key": "Tipologia_final", "label": "Tipología final" }
+    ]
+  },
+  "Clasificacion_Ruido_Quejas.geojson": {
+    "fields": [
+      { "key": "agencia", "label": "Agencia" },
+      { "key": "barrio", "label": "Barrio" },
+      { "key": "cai", "label": "CAI" },
+      { "key": "cierre", "label": "Cierre del caso" },
+      { "key": "codigo_barrio", "label": "Código de barrio" },
+      { "key": "comuna", "label": "Comuna" },
+      { "key": "departamento_policia", "label": "Dependencia policial" },
+      { "key": "estacion", "label": "Estación" },
+      { "key": "fecha", "label": "Fecha y hora", "type": "datetime_ms" },
+      { "key": "tipo_caso", "label": "Tipo de caso" },
+      { "key": "zona", "label": "Zona" },
+      { "key": "anio", "label": "Año", "type": "integer" },
+      { "key": "cantidad", "label": "Cantidad", "type": "integer" },
+      { "key": "cuadrante", "label": "Cuadrante" },
+      { "key": "Longitud", "label": "Longitud", "type": "coord" },
+      { "key": "Latitud", "label": "Latitud", "type": "coord" }
+    ]
+  },
+  "Airbnb.json": {
+    "fields": [
+      { "key": "FID", "label": "FID", "type": "integer" },
+      { "key": "id", "label": "ID anuncio" },
+      { "key": "title", "label": "Título" },
+      { "key": "url", "label": "Enlace", "type": "url" }
+    ]
+  }
+}
