@@ -5,6 +5,33 @@ const path = require('path');
 const router = express.Router();
 // Ruta relativa al proyecto (src/routes -> proyecto raíz)
 const CSVJSON_PATH = path.join(__dirname, '..', '..', 'csvjson');
+const RESULTADOS_ANALISIS_PATH = path.join(__dirname, '..', '..', 'resultados_analisis.json');
+
+function normalizeCommentText(s) {
+  return (s || '').toString().replace(/\s+/g, ' ').trim();
+}
+
+/** Map key: (usuario|comentario_normalized) -> "POSITIVO"|"NEGATIVO"|"NEUTRO" */
+function loadSentimentMap() {
+  const map = new Map();
+  if (!fs.existsSync(RESULTADOS_ANALISIS_PATH)) return map;
+  try {
+    const raw = JSON.parse(fs.readFileSync(RESULTADOS_ANALISIS_PATH, 'utf8'));
+    const arr = Array.isArray(raw) ? raw : [];
+    arr.forEach((item) => {
+      const user = ((item.metadata && item.metadata.usuario) || '').toString().trim().toLowerCase();
+      const comentario = normalizeCommentText(item.comentario || item.analisis?.comentario_analizado || '');
+      const sentiment = (item.analisis && item.analisis.sentiment) ? String(item.analisis.sentiment).toUpperCase() : '';
+      if (user && comentario && sentiment) {
+        const key = user + '|' + comentario;
+        if (!map.has(key)) map.set(key, sentiment);
+      }
+    });
+  } catch (e) {
+    console.error('Error cargando resultados_analisis.json:', e);
+  }
+  return map;
+}
 
 /**
  * GET /api/metrics/seguidores
@@ -176,6 +203,7 @@ router.get('/comentadores-post', (req, res) => {
       if (u) sigueSet.add(u);
     }
 
+    const sentimentMap = loadSentimentMap();
     const profiles = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
     const profileMap = new Map();
     for (const p of (Array.isArray(profiles) ? profiles : [])) {
@@ -188,6 +216,12 @@ router.get('/comentadores-post', (req, res) => {
       const prof = profileMap.get(user) || {};
       const followers = parseInt(prof.followersCount, 10) || 1;
       const follows = parseInt(prof.followsCount, 10) || 1;
+      const texts = commentsTextsByUser[user] || [];
+      const commentsWithSentiment = texts.map((text) => {
+        const key = user + '|' + normalizeCommentText(text);
+        const sentiment = sentimentMap.get(key) || null;
+        return { text, sentiment };
+      });
       result.push({
         username: prof.username || user,
         fullName: (prof.fullName || '').trim() || user,
@@ -196,7 +230,8 @@ router.get('/comentadores-post', (req, res) => {
         followers_plot: Math.max(1, followers),
         follows_plot: Math.max(1, follows),
         commentsInPost,
-        commentsTexts: commentsTextsByUser[user] || [],
+        commentsTexts: texts,
+        commentsWithSentiment,
         followsCamilo: sigueSet.has(user)
       });
     }
@@ -1085,6 +1120,7 @@ router.get('/distribucion-comentadores-red', (req, res) => {
       }
     }
 
+    const sentimentMap = loadSentimentMap();
     const profiles = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
     const list = Array.isArray(profiles) ? profiles : [];
     let filtered = list
@@ -1096,6 +1132,12 @@ router.get('/distribucion-comentadores-red', (req, res) => {
         const user = (p.username || '').toLowerCase();
         const followsCamilo = sigueSet.has(user);
         const commentsCount = commentsCountByUser.get(user) || 1;
+        const texts = commentsTextsByUser.get(user) || [];
+        const commentsWithSentiment = texts.map((text) => {
+          const key = user + '|' + normalizeCommentText(text);
+          const sentiment = sentimentMap.get(key) || null;
+          return { text, sentiment };
+        });
         return {
           username: p.username || '',
           fullName: (p.fullName || '').trim() || p.username || '—',
@@ -1105,7 +1147,8 @@ router.get('/distribucion-comentadores-red', (req, res) => {
           followsCount: follows,
           postsCount: (posts === 0 || isNaN(posts)) ? 1 : posts,
           commentsCount,
-          commentsTexts: commentsTextsByUser.get(user) || [],
+          commentsTexts: texts,
+          commentsWithSentiment,
           followsCamilo,
           private: toBool(p.private),
           isBusinessAccount: toBool(p.isBusinessAccount),

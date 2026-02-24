@@ -10,6 +10,30 @@
   const SEARCH_ID = 'usuariosComentadoresSearch';
 
   let allData = [];
+  const DOWNLOAD_BTN_ID = 'usuariosComentadoresDownloadCsv';
+
+  function csvEscape(val) {
+    const s = String(val == null ? '' : val);
+    if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function downloadCSV() {
+    if (!allData.length) return;
+    const headers = ['Usuario', 'Cantidad comentarios', 'Posts en que comentó'];
+    const rows = allData.map(u => {
+      const postsText = (u.posts || []).map(p => (p.shortCaption || p.url || 'Post').trim()).join(' | ');
+      return [ (u.username || '').trim(), u.commentCount || 0, postsText ];
+    });
+    const line = (arr) => arr.map(csvEscape).join(',');
+    const csv = '\uFEFF' + line(headers) + '\r\n' + rows.map(line).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'usuarios-mas-comentadores-y-posts.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   function formatNum(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -85,6 +109,8 @@
       searchEl.addEventListener('input', () => render(allData, searchEl.value));
       searchEl.addEventListener('keyup', () => render(allData, searchEl.value));
     }
+    const downloadBtn = document.getElementById(DOWNLOAD_BTN_ID);
+    if (downloadBtn) downloadBtn.addEventListener('click', downloadCSV);
   }
 
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', load) : load();

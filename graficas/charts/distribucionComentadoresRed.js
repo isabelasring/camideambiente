@@ -128,6 +128,13 @@
           }
           return parts.join('<br>');
         }
+        function sentimentLabel(sentiment) {
+          const s = (sentiment || '').toUpperCase();
+          if (s === 'POSITIVO') return '  [Positivo]';
+          if (s === 'NEGATIVO') return '  [Negativo]';
+          if (s === 'NEUTRO') return '  [Neutro]';
+          return '';
+        }
         function tooltipText(d) {
           const lines = [
             (d.fullName || '—') + '<br>@' + d.username,
@@ -136,13 +143,16 @@
             'Comentarios: ' + (d.commentsCount || 0),
             d.followsCamilo ? '✓ Sigue a Camilo' : '✗ No sigue'
           ];
-          const texts = d.commentsTexts || [];
-          if (texts.length) {
+          const withSentiment = d.commentsWithSentiment && d.commentsWithSentiment.length;
+          const items = withSentiment ? d.commentsWithSentiment : (d.commentsTexts || []).map(t => ({ text: t, sentiment: null }));
+          if (items.length) {
             lines.push('<br><b>Textos de los comentarios:</b>');
-            texts.forEach((c, i) => {
-              const safe = escHtml(c);
+            items.forEach((c, i) => {
+              const text = typeof c === 'object' && c != null ? c.text : c;
+              const safe = escHtml(text);
               const wrapped = wrapToWidth(safe);
-              lines.push((i + 1) + '. ' + wrapped);
+              const sent = typeof c === 'object' && c != null ? c.sentiment : null;
+              lines.push((i + 1) + '. ' + wrapped + sentimentLabel(sent));
             });
           }
           return lines.join('<br>');

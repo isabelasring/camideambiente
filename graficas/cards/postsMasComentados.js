@@ -8,6 +8,33 @@
   const API_URL = '/api/metrics/posts-mas-comentados';
   const API_COMENTADORES = '/api/metrics/comentadores-post';
   const CONTAINER_ID = 'postsList';
+  let postsData = [];
+
+  function csvEscape(v) {
+    const s = String(v == null ? '' : v);
+    if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function downloadPostsCSV() {
+    if (!postsData.length) return;
+    const headers = ['#', 'Título', 'Comentarios', 'Likes', 'URL'];
+    const rows = postsData.map((p, i) => [
+      i + 1,
+      (p.name || '').trim(),
+      p.commentsCount ?? '',
+      p.likesCount ?? '',
+      (p.url || '').trim()
+    ]);
+    const line = (arr) => arr.map(csvEscape).join(',');
+    const csv = '\uFEFF' + line(headers) + '\r\n' + rows.map(line).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'posts-mas-comentados.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   function formatNum(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -93,6 +120,13 @@
       }
       return parts.join('<br>');
     }
+    function sentimentLabel(sentiment) {
+      const s = (sentiment || '').toUpperCase();
+      if (s === 'POSITIVO') return '  [Positivo]';
+      if (s === 'NEGATIVO') return '  [Negativo]';
+      if (s === 'NEUTRO') return '  [Neutro]';
+      return '';
+    }
     function tooltipText(d) {
       const lines = [
         (d.fullName || '—') + '<br>@' + d.username,
@@ -101,13 +135,16 @@
         'Comentarios en este post: ' + (d.commentsInPost || 0),
         d.followsCamilo ? '✓ Sigue a Camilo' : '✗ No sigue'
       ];
-      const texts = d.commentsTexts || [];
-      if (texts.length) {
+      const withSentiment = d.commentsWithSentiment && d.commentsWithSentiment.length;
+      const items = withSentiment ? d.commentsWithSentiment : (d.commentsTexts || []).map(t => ({ text: t, sentiment: null }));
+      if (items.length) {
         lines.push('<br><b>Textos de los comentarios:</b>');
-        texts.forEach((c, i) => {
-          const safe = escHtml(c);
+        items.forEach((c, i) => {
+          const text = typeof c === 'object' && c != null ? c.text : c;
+          const safe = escHtml(text);
           const wrapped = wrapToWidth(safe);
-          lines.push((i + 1) + '. ' + wrapped);
+          const sent = typeof c === 'object' && c != null ? c.sentiment : null;
+          lines.push((i + 1) + '. ' + wrapped + sentimentLabel(sent));
         });
       }
       return lines.join('<br>');
@@ -202,7 +239,8 @@
   function render(data) {
     const list = document.getElementById(CONTAINER_ID);
     if (!list) return;
-    if (!data || !Array.isArray(data) || !data.length) {
+    postsData = Array.isArray(data) ? data : [];
+    if (!postsData.length) {
       list.innerHTML = '<p style="color:rgba(255,255,255,0.7);">No hay posts.</p>';
       return;
     }
@@ -210,6 +248,12 @@
     const half = Math.ceil(data.length / 2);
     const left = data.slice(0, half);
     const right = data.slice(half);
+
+    const downloadPostsBtn = document.getElementById('postsListDownloadCsv');
+    if (downloadPostsBtn && !downloadPostsBtn.dataset.bound) {
+      downloadPostsBtn.dataset.bound = '1';
+      downloadPostsBtn.addEventListener('click', downloadPostsCSV);
+    }
 
     const renderCol = (arr, offset) => arr.map((p, i) => {
       const idx = offset + i;

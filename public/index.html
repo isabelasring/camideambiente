@@ -386,9 +386,10 @@
                 <!-- Posts con más comentarios -->
                 <div class="charts-row" style="margin-bottom: 2rem;">
                     <div class="list-card glass" style="width: 100%;">
-                        <div class="list-header">
+                        <div class="list-header" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
                             <h3>Posts con más comentarios</h3>
                             <span class="post-count-badge">23 posts</span>
+                            <button type="button" class="btn btn-small" id="postsListDownloadCsv" title="Descargar lista de posts en CSV">Descargar CSV</button>
                         </div>
                         <div class="posts-list" id="postsList">
                             <!-- Se cargan dinámicamente -->
@@ -403,8 +404,9 @@
                             <h3>Usuarios que más comentan</h3>
                         </div>
                         <p class="chart-subtitle" style="margin-bottom:1rem;color:rgba(255,255,255,0.75);">Usuarios más activos en los 23 posts más populares (primeros 100 comentarios por post). Se indica en qué publicaciones comentaron.</p>
-                        <div class="usuarios-comentadores-search-wrap" style="margin-bottom:1rem;">
+                        <div class="usuarios-comentadores-search-wrap" style="display:flex;flex-wrap:wrap;align-items:center;gap:1rem;margin-bottom:1rem;">
                             <input type="text" id="usuariosComentadoresSearch" class="usuarios-comentadores-search" placeholder="Buscar por @usuario..." autocomplete="off">
+                            <button type="button" class="btn btn-small" id="usuariosComentadoresDownloadCsv" title="Descargar usuarios y posts en que comentaron">Descargar CSV</button>
                         </div>
                         <div class="usuarios-comentadores-list" id="usuariosMasComentadoresList">
                             <!-- Se cargan dinámicamente -->
