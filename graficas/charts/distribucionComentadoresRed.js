@@ -51,6 +51,7 @@
   }
 
   let cached = null;
+  let sentimentFilter = 'all';
 
   function render(data) {
     const container = document.getElementById(CONTAINER_ID);
@@ -65,6 +66,17 @@
     const commentsMax = (commentsMaxEl && commentsMaxEl.value !== '') ? parseInt(commentsMaxEl.value, 10) : null;
 
     let dataFiltrada = data || [];
+
+    if (sentimentFilter !== 'all') {
+      const sent = sentimentFilter.toUpperCase();
+      dataFiltrada = dataFiltrada
+        .map((d) => {
+          const arr = (d.commentsWithSentiment || []).filter((c) => (c.sentiment || '').toUpperCase() === sent);
+          return { ...d, commentsCount: arr.length, commentsWithSentiment: arr };
+        })
+        .filter((d) => d.commentsCount > 0);
+    }
+
     if (commentsExact != null && !isNaN(commentsExact)) {
       dataFiltrada = dataFiltrada.filter(d => (d.commentsCount ?? 0) === commentsExact);
     } else {
@@ -98,6 +110,7 @@
     const noSigue = dataFiltrada.filter(d => !d.followsCamilo);
 
         const maxComments = Math.max(1, ...dataFiltrada.map(d => d.commentsCount || 1));
+        const sentimentLabelShort = sentimentFilter === 'all' ? '' : (sentimentFilter === 'POSITIVO' ? 'Positivo' : sentimentFilter === 'NEGATIVO' ? 'Negativo' : 'Neutro');
         const diamMax = 50;
         const sizeref = (2 * maxComments) / (diamMax * diamMax);
 
@@ -206,6 +219,7 @@
           const n = noSigue.length.toLocaleString('es-CO');
           const tot = dataFiltrada.length.toLocaleString('es-CO');
           let msg = `Usuarios en el filtro: ${tot} (Siguen: ${s} | No siguen: ${n})`;
+          if (sentimentLabelShort) msg += ` · Sentimiento: ${sentimentLabelShort}`;
           if (commentsExact != null && !isNaN(commentsExact)) {
             msg += ` · exactamente ${commentsExact} comentarios`;
           } else if ((commentsMin != null && !isNaN(commentsMin)) || (commentsMax != null && !isNaN(commentsMax))) {
@@ -273,6 +287,23 @@
         el.addEventListener('input', applyCommentsAndRender);
         el.addEventListener('change', applyCommentsAndRender);
       }
+    });
+    const sentimentBtns = [
+      document.getElementById('filterSentimentAll'),
+      document.getElementById('filterSentimentPositivo'),
+      document.getElementById('filterSentimentNegativo'),
+      document.getElementById('filterSentimentNeutro')
+    ];
+    sentimentBtns.forEach((btn) => {
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        const sent = (this.getAttribute('data-sentiment') || 'all').toUpperCase();
+        if (sentimentFilter === (sent === 'ALL' ? 'all' : sent)) return;
+        sentimentFilter = sent === 'ALL' ? 'all' : sent;
+        sentimentBtns.forEach((b) => b && b.classList.remove('active'));
+        this.classList.add('active');
+        applyCommentsAndRender();
+      });
     });
     const downloadsEl = document.getElementById(DOWNLOADS_ID);
     if (downloadsEl) {

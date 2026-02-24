@@ -469,6 +469,13 @@
                                         <input type="number" id="filterCommentsMaxRed" min="0" placeholder="Ej: 50">
                                     </div>
                                 </div>
+                                <div class="chart-filters-row" style="margin-top:0.5rem;">
+                                    <span style="color:rgba(255,255,255,0.8);font-size:0.9rem;margin-right:0.5rem;">Sentimiento:</span>
+                                    <button type="button" class="btn btn-small btn-sentiment-filter active" id="filterSentimentAll" data-sentiment="all">Todos</button>
+                                    <button type="button" class="btn btn-small btn-sentiment-filter" id="filterSentimentPositivo" data-sentiment="POSITIVO">Positivo</button>
+                                    <button type="button" class="btn btn-small btn-sentiment-filter" id="filterSentimentNegativo" data-sentiment="NEGATIVO">Negativo</button>
+                                    <button type="button" class="btn btn-small btn-sentiment-filter" id="filterSentimentNeutro" data-sentiment="NEUTRO">Neutro</button>
+                                </div>
                             </div>
                             <button class="chart-menu">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
