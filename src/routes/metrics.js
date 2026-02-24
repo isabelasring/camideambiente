@@ -275,6 +275,68 @@ router.get('/usuarios-mas-comentadores', (req, res) => {
 });
 
 /**
+ * GET /api/metrics/hashtags
+ * Datos de hashtags.csv para gráfica de distribución por fecha y hora
+ */
+router.get('/hashtags', (req, res) => {
+  try {
+    const csvPath = path.join(CSVJSON_PATH, 'hashtags.csv');
+    if (!fs.existsSync(csvPath)) {
+      return res.status(404).json({ error: 'hashtags.csv no encontrado' });
+    }
+    let content = fs.readFileSync(csvPath, 'utf8');
+    content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/^\uFEFF/, '');
+    const rows = parseCSV(content);
+    if (rows.length < 2) return res.json({ data: [] });
+
+    const headers = rows[0].map(h => (h || '').trim().toLowerCase());
+    const idx = (name) => headers.indexOf(name);
+    const iCaption = idx('caption') >= 0 ? idx('caption') : 0;
+    const iOwnerFull = idx('ownerfullname') >= 0 ? idx('ownerfullname') : 1;
+    const iOwnerUser = idx('ownerusername') >= 0 ? idx('ownerusername') : 2;
+    const iUrl = idx('url') >= 0 ? idx('url') : 3;
+    const iComments = idx('commentscount') >= 0 ? idx('commentscount') : 4;
+    const iLikes = idx('likescount') >= 0 ? idx('likescount') : 6;
+    const iTimestamp = idx('timestamp') >= 0 ? idx('timestamp') : 7;
+    const iQueryTag = idx('querytag') >= 0 ? idx('querytag') : 8;
+
+    const data = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const ts = (r[iTimestamp] || '').trim();
+      if (!ts) continue;
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) continue;
+      const dateStr = d.toISOString().split('T')[0];
+      const timeStr = d.toTimeString().slice(0, 5);
+      const hashtags = [];
+      for (let k = 0; k < 29; k++) {
+        const j = headers.indexOf('hashtags/' + k);
+        if (j >= 0 && r[j]) hashtags.push(String(r[j]).trim());
+      }
+      data.push({
+        caption: (r[iCaption] || '').replace(/\s+/g, ' ').trim().substring(0, 300),
+        ownerFullName: (r[iOwnerFull] || '').trim(),
+        ownerUsername: (r[iOwnerUser] || '').trim(),
+        url: (r[iUrl] || '').trim(),
+        commentsCount: parseInt(r[iComments], 10) || 0,
+        likesCount: parseInt(r[iLikes], 10) || 0,
+        timestamp: ts,
+        queryTag: (r[iQueryTag] || '').trim(),
+        hashtags: hashtags.filter(Boolean),
+        dateStr,
+        timeStr,
+        dateNum: d.getTime()
+      });
+    }
+    return res.json({ data });
+  } catch (err) {
+    console.error('Error hashtags:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/metrics/posts
  * Cuenta total de posts desde postsCamilo.csv
  */

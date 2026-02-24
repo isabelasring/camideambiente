@@ -73,9 +73,11 @@ body {
 }
 
 .sidebar-logo {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #ffffff;
+    display: block;
+    max-width: 100%;
+    height: auto;
+    max-height: 48px;
+    object-fit: contain;
 }
 
 .sidebar-nav {
@@ -1364,4 +1366,65 @@ body {
     background: var(--white-hover);
     color: white !important;
     border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Popup hashtags */
+.hashtag-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.hashtag-popup.open {
+    display: flex;
+}
+.hashtag-popup-content {
+    position: relative;
+    background: #1f2937;
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+.hashtag-popup-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.hashtag-popup-close:hover {
+    color: white;
+}
+.hashtag-popup-row {
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+.hashtag-popup-row strong {
+    display: inline-block;
+    min-width: 90px;
+}
+.hashtag-popup-links {
+    margin-top: 1.25rem;
+    display: flex;
+    gap: 1rem;
+}
+.hashtag-popup-links a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+.hashtag-popup-links a:hover {
+    text-decoration: underline;
 }

@@ -89,6 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             }
+            if (viewId === 'posts') {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        if (window.ChartDistribucionHashtags && window.ChartDistribucionHashtags.load) {
+                            window.ChartDistribucionHashtags.load();
+                        }
+                    }, 80);
+                });
+            }
         });
     });
 

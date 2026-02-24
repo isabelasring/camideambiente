@@ -24,7 +24,7 @@
         <!-- Sidebar lateral izquierdo -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2 class="sidebar-logo">Geotrends</h2>
+                <img src="/isologo-02.png" alt="Geotrends" class="sidebar-logo">
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-item sidebar-item-expandable expanded" data-expand="camideambiente">
@@ -36,8 +36,8 @@
                     </button>
                     <div class="sidebar-subitems" id="sidebarCamideambiente">
                         <button type="button" class="sidebar-subitem active" data-tab="followers">followers</button>
-                        <button type="button" class="sidebar-subitem" data-tab="profiles">profiles</button>
-                        <button type="button" class="sidebar-subitem" data-tab="posts">posts</button>
+                        <button type="button" class="sidebar-subitem" data-tab="profiles">comments</button>
+                        <button type="button" class="sidebar-subitem" data-tab="posts">hashtags</button>
                         <button type="button" class="sidebar-subitem" data-tab="images">images</button>
                     </div>
                 </div>
@@ -488,6 +488,19 @@
                 </div>
             </div><!-- /profiles -->
 
+            <!-- Vista hashtags -->
+            <div class="dashboard-view" data-view="posts" style="display:none;">
+                <div class="chart-card glass" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <h3>Hashtags por fecha y hora</h3>
+                        <p class="chart-subtitle">Clic en un punto para ver el detalle (usuario, fecha, hora, caption, hashtags).</p>
+                    </div>
+                    <div class="chart-canvas-wrap chart-canvas-wrap-tall">
+                        <div id="chartDistribucionHashtags"></div>
+                    </div>
+                </div>
+            </div><!-- /hashtags -->
+
         </main>
     </div>
 
@@ -521,6 +534,7 @@
     <script src="/graficas/charts/distribucionComentadoresRed.js"></script>
     <script src="/graficas/charts/distribucionUsuariosComentariosFiltrado.js"></script>
     <script src="/graficas/charts/wordcloudBiografiasComentarios.js"></script>
+    <script src="/graficas/charts/distribucionHashtags.js"></script>
     <script src="/graficas/cards/topPerfilesComentadores.js"></script>
     <script src="dashboard.js"></script>
 </body>
