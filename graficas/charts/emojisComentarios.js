@@ -52,8 +52,8 @@
             datasets: [{
               label: 'Frecuencia',
               data: counts,
-              backgroundColor: 'rgba(59, 130, 246, 0.8)',
-              borderColor: 'rgba(59, 130, 246, 1)',
+              backgroundColor: 'rgba(37, 99, 235, 0.8)',
+              borderColor: '#2563eb',
               borderWidth: 1,
               borderRadius: 8
             }]

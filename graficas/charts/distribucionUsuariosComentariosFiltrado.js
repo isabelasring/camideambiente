@@ -24,11 +24,11 @@
   }
 
   const SEGMENTO_COLORS = {
-    regular: '#94a3b8',
+    regular: '#64748b',
     activo: '#60a5fa',
-    micro_influencer: '#a78bfa',
-    influencer: '#fb923c',
-    bajo_engagement: '#4ade80'
+    micro_influencer: '#dc2626',
+    influencer: '#7c3aed',
+    bajo_engagement: '#7c3aed'
   };
 
   function load() {
@@ -91,7 +91,7 @@
               sizeref: 2,
               sizemin: 4,
               line: { width: 0.5, color: 'white' },
-              color: SEGMENTO_COLORS[seg] || '#94a3b8'
+              color: SEGMENTO_COLORS[seg] || '#2563eb'
             },
             text: filtered.map(d =>
               `${d.fullName || '—'}<br>@${d.username}<br>Seguidores: ${(d.followersCount || 0).toLocaleString()}<br>Seguidos: ${(d.followsCount || 0).toLocaleString()}<br>Posts: ${d.postsCount}<br>Segmento: ${d.segmento}`

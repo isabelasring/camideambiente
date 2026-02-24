@@ -9,6 +9,7 @@
   const API_COMENTADORES = '/api/metrics/comentadores-post';
   const CONTAINER_ID = 'postsList';
   let postsData = [];
+  let sentimentFilterPost = 'all';
 
   function csvEscape(v) {
     const s = String(v == null ? '' : v);
@@ -60,6 +61,34 @@
     return '\uFEFF' + header + '\r\n' + rows.join('\r\n');
   }
 
+  function toCSVComments(data) {
+    const esc = v => {
+      const s = String(v ?? '').replace(/"/g, '""');
+      return /[,"\n\r]/.test(s) ? '"' + s + '"' : s;
+    };
+    const header = 'Usuario,Nombre,Seguidores,Seguidos,Sigue a Camilo,Comentario,Sentimiento';
+    const rows = [];
+    (data || []).forEach((d) => {
+      const items = (d.commentsWithSentiment && d.commentsWithSentiment.length)
+        ? d.commentsWithSentiment
+        : (d.commentsTexts || []).map(t => ({ text: t, sentiment: '' }));
+      items.forEach((c) => {
+        const text = typeof c === 'object' && c != null ? c.text : c;
+        const sent = (typeof c === 'object' && c != null ? (c.sentiment || '') : '') || '';
+        rows.push([
+          esc(d.username),
+          esc(d.fullName),
+          d.followersCount ?? '',
+          d.followsCount ?? '',
+          d.followsCamilo ? 'Sí' : 'No',
+          esc(text),
+          sent || '—'
+        ].join(','));
+      });
+    });
+    return '\uFEFF' + header + '\r\n' + rows.join('\r\n');
+  }
+
   function downloadCSV(content, filename) {
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
@@ -73,24 +102,41 @@
     const chartEl = document.getElementById(chartId);
     const expand = chartEl?.closest('.post-item-expand');
     if (!expand) return;
-    expand._comentadoresData = data || [];
+    expand._comentadoresDataRaw = data || [];
+    expand._postUrl = postUrl;
+    let dataFiltrada = data || [];
+    if (sentimentFilterPost !== 'all') {
+      const sent = sentimentFilterPost.toUpperCase();
+      dataFiltrada = dataFiltrada
+        .map((d) => {
+          const arr = (d.commentsWithSentiment || []).filter((c) => (c.sentiment || '').toUpperCase() === sent);
+          return { ...d, commentsInPost: arr.length, commentsWithSentiment: arr };
+        })
+        .filter((d) => (d.commentsInPost || 0) > 0);
+    }
+    expand._comentadoresData = dataFiltrada;
     const btnVer = expand.querySelector('.btn-ver-post');
     const btnFollowers = expand.querySelector('.btn-download-followers');
     const btnNoFollowers = expand.querySelector('.btn-download-no-followers');
+    const btnComments = expand.querySelector('.btn-download-comments-post');
     if (btnVer) {
       btnVer.href = postUrl;
       btnVer.style.display = 'inline-flex';
     }
+    if (btnComments) {
+      btnComments.style.display = dataFiltrada.length ? 'inline-flex' : 'none';
+      btnComments.dataset.postUrl = postUrl;
+    }
     if (btnFollowers) {
-      btnFollowers.style.display = data?.length ? 'inline-flex' : 'none';
+      btnFollowers.style.display = dataFiltrada.length ? 'inline-flex' : 'none';
       btnFollowers.dataset.postUrl = postUrl;
     }
     if (btnNoFollowers) {
-      btnNoFollowers.style.display = data?.length ? 'inline-flex' : 'none';
+      btnNoFollowers.style.display = dataFiltrada.length ? 'inline-flex' : 'none';
       btnNoFollowers.dataset.postUrl = postUrl;
     }
-    if (!data || !data.length) {
-      chartEl.innerHTML = '<p style="color:rgba(255,255,255,0.8);padding:2rem;">No hay comentarios para este post.</p>';
+    if (!dataFiltrada.length) {
+      chartEl.innerHTML = '<p style="color:rgba(255,255,255,0.8);padding:2rem;">No hay comentarios para este post' + (sentimentFilterPost !== 'all' ? ' con sentimiento ' + (sentimentFilterPost === 'POSITIVO' ? 'positivo' : sentimentFilterPost === 'NEGATIVO' ? 'negativo' : 'neutro') : '') + '.</p>';
       return;
     }
     const WRAP_WIDTH = 48;
@@ -150,9 +196,9 @@
       return lines.join('<br>');
     }
 
-    const sigue = data.filter(d => d.followsCamilo);
-    const noSigue = data.filter(d => !d.followsCamilo);
-    const maxComments = Math.max(1, ...data.map(d => d.commentsInPost || 1));
+    const sigue = dataFiltrada.filter(d => d.followsCamilo);
+    const noSigue = dataFiltrada.filter(d => !d.followsCamilo);
+    const maxComments = Math.max(1, ...dataFiltrada.map(d => d.commentsInPost || 1));
     const diamMax = 50;
     const sizeref = (2 * maxComments) / (diamMax * diamMax);
     const trace = (arr, name, color) => ({
@@ -173,8 +219,8 @@
       hoverinfo: 'text'
     });
     const traces = [
-      trace(sigue, 'Sigue a Camilo', '#22c55e'),
-      trace(noSigue, 'No sigue a Camilo', '#f97316')
+      trace(sigue, 'Sigue a Camilo', '#dc2626'),
+      trace(noSigue, 'No sigue a Camilo', '#2563eb')
     ].filter(t => t.x.length > 0);
     const layout = {
       title: { text: 'Seguidores vs Seguidos (tamaño = comentarios)', font: { size: 12, color: '#1f2937' } },
@@ -212,7 +258,7 @@
     wrapper.querySelector('.post-item')?.classList.add('post-item-active');
     wrapper.classList.add('post-item-wrapper-expanded');
     chartEl.innerHTML = '';
-    expand.querySelectorAll('.btn-ver-post, .btn-download-followers, .btn-download-no-followers').forEach(b => { b.style.display = 'none'; });
+    expand.querySelectorAll('.btn-ver-post, .btn-download-comments-post, .btn-download-followers, .btn-download-no-followers').forEach(b => { b.style.display = 'none'; });
     expand.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     fetch(API_COMENTADORES + '?postUrl=' + encodeURIComponent(postUrl))
@@ -278,9 +324,17 @@
           </div>
           ${clickable ? `
           <div class="post-item-expand" style="display:none;">
-            <p class="chart-subtitle posts-expand-subtitle">Primeros 100 comentarios. Verde = sigue a Camilo. Naranja = no sigue.</p>
+            <p class="chart-subtitle posts-expand-subtitle">Primeros 100 comentarios. Rojo = sigue a Camilo. Azul = no sigue.</p>
+            <div class="chart-filters-row" style="margin-bottom:0.5rem;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+              <span style="color:rgba(255,255,255,0.8);font-size:0.9rem;margin-right:0.25rem;">Sentimiento:</span>
+              <button type="button" class="btn btn-small btn-sentiment-filter-post active" data-sentiment="all" title="Ver todos los comentarios sin filtrar">Todos</button>
+              <button type="button" class="btn btn-small btn-sentiment-filter-post" data-sentiment="POSITIVO">Positivo</button>
+              <button type="button" class="btn btn-small btn-sentiment-filter-post" data-sentiment="NEGATIVO">Negativo</button>
+              <button type="button" class="btn btn-small btn-sentiment-filter-post" data-sentiment="NEUTRO">Neutro</button>
+            </div>
             <div id="${chartId}" class="post-item-expand-chart chart-canvas-wrap-tall" style="min-height:400px;"></div>
             <div class="post-expand-buttons">
+              <button type="button" class="btn btn-download-comments-post" style="display:none;" title="Descargar comentarios del filtro actual (con columna Sentimiento)">Comentarios CSV</button>
               <button type="button" class="btn btn-download-followers" style="display:none;">Followers CSV</button>
               <button type="button" class="btn btn-download-no-followers" style="display:none;">No followers CSV</button>
               <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-ver-post" style="display:none;">Ver post en Instagram</a>
@@ -299,14 +353,41 @@
     if (!list.dataset.downloadBound) {
       list.dataset.downloadBound = '1';
       list.addEventListener('click', (e) => {
+        const btnComments = e.target.closest('.btn-download-comments-post');
+        if (btnComments) {
+          const expand = btnComments.closest('.post-item-expand');
+          const data = expand?._comentadoresData || [];
+          const slug = (expand?._postUrl || btnComments.dataset.postUrl || '').match(/\/p\/([^/?]+)/)?.[1] || 'post';
+          const suf = sentimentFilterPost === 'all' ? '' : '_' + sentimentFilterPost.toLowerCase();
+          downloadCSV(toCSVComments(data), 'comentarios_' + slug + suf + '.csv');
+          return;
+        }
         const btn = e.target.closest('.btn-download-followers, .btn-download-no-followers');
-        if (!btn) return;
-        const expand = btn.closest('.post-item-expand');
-        const data = expand?._comentadoresData || [];
-        const slug = (btn.dataset.postUrl || '').match(/\/p\/([^/?]+)/)?.[1] || 'post';
-        const isFollowers = btn.classList.contains('btn-download-followers');
-        const filtered = isFollowers ? data.filter(d => d.followsCamilo) : data.filter(d => !d.followsCamilo);
-        downloadCSV(toCSV(filtered), (isFollowers ? 'followers' : 'no_followers') + '_' + slug + '.csv');
+        if (btn) {
+          const expand = btn.closest('.post-item-expand');
+          const data = expand?._comentadoresData || [];
+          const slug = (btn.dataset.postUrl || '').match(/\/p\/([^/?]+)/)?.[1] || 'post';
+          const isFollowers = btn.classList.contains('btn-download-followers');
+          const filtered = isFollowers ? data.filter(d => d.followsCamilo) : data.filter(d => !d.followsCamilo);
+          downloadCSV(toCSV(filtered), (isFollowers ? 'followers' : 'no_followers') + '_' + slug + '.csv');
+          return;
+        }
+        const sentimentBtn = e.target.closest('.btn-sentiment-filter-post');
+        if (sentimentBtn) {
+          const sent = (sentimentBtn.getAttribute('data-sentiment') || 'all').toUpperCase();
+          if (sentimentFilterPost === (sent === 'ALL' ? 'all' : sent)) return;
+          sentimentFilterPost = sent === 'ALL' ? 'all' : sent;
+          list.querySelectorAll('.btn-sentiment-filter-post').forEach((b) => b.classList.remove('active'));
+          list.querySelectorAll('.btn-sentiment-filter-post[data-sentiment="' + sentimentFilterPost + '"]').forEach((b) => b.classList.add('active'));
+          const expanded = list.querySelector('.post-item-wrapper-expanded');
+          if (expanded) {
+            const expand = expanded.querySelector('.post-item-expand');
+            const chartEl = expanded.querySelector('.post-item-expand-chart');
+            const raw = expand?._comentadoresDataRaw;
+            const postUrl = expand?._postUrl;
+            if (chartEl && chartEl.id && raw && postUrl) renderChart(chartEl.id, raw, postUrl);
+          }
+        }
       });
     }
 

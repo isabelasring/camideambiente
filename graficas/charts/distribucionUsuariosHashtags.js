@@ -64,7 +64,7 @@
         sizemode: 'area',
         sizeref,
         sizemin: 8,
-        color: '#06b6d4',
+        color: '#2563eb',
         opacity: 0.7,
         line: { width: 0.5, color: 'white' }
       },

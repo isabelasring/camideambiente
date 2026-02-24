@@ -50,7 +50,7 @@
         },
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         color: function() {
-          const colors = ['#1e40af', '#7c3aed', '#059669', '#dc2626', '#d97706', '#0891b2', '#4f46e5', '#0d9488', '#be185d', '#0369a1'];
+          const colors = ['#dc2626', '#7c3aed', '#2563eb', '#f87171', '#a78bfa', '#60a5fa'];
           return colors[Math.floor(Math.random() * colors.length)];
         },
         rotateRatio: 0.3,

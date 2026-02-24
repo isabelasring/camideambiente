@@ -50,19 +50,17 @@
                         <button type="button" class="sidebar-subitem active" data-tab="followers">followers</button>
                         <button type="button" class="sidebar-subitem" data-tab="profiles">comments</button>
                         <button type="button" class="sidebar-subitem" data-tab="posts">hashtags</button>
-                        <button type="button" class="sidebar-subitem" data-tab="comments-analysis">Comment analysis</button>
                         <button type="button" class="sidebar-subitem" data-tab="capas">Capas</button>
                         <button type="button" class="sidebar-subitem" data-tab="geodatos">Geodatos</button>
-                        <button type="button" class="sidebar-subitem" data-tab="images">images</button>
                     </div>
                 </div>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-profile">
-                    <div class="avatar">C</div>
+                    <div class="avatar"><img src="/camilo.jpg" alt="Camilo"></div>
                     <div class="user-info">
                         <span class="user-name">Camilo</span>
-                        <span class="user-role">Político</span>
+                        <span class="user-role">Candidato</span>
                     </div>
                 </div>
             </div>
@@ -77,33 +75,19 @@
                 <!-- Información del Perfil Camilo (izquierda) -->
                 <div class="profile-card glass">
                     <div class="profile-header">
-                        <div class="profile-avatar-large">C</div>
+                        <div class="profile-avatar-large"><img src="/camilo.jpg" alt="Camilo"></div>
                         <div class="profile-info">
                             <h3>Camilo</h3>
-                            <div class="profile-rating">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                </svg>
-                                <span>4.8 (2.5K reviews)</span>
-                            </div>
                         </div>
                     </div>
                     <div class="profile-details">
                         <div class="detail-item">
                             <span class="detail-label">Instagram</span>
-                            <span class="detail-value">@camilo</span>
+                            <span class="detail-value">@camideambiente</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Categoría</span>
-                            <span class="detail-value">Político</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Última actualización</span>
-                            <span class="detail-value">Hace 2 horas</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Total Engagement</span>
-                            <span class="detail-value highlight">+18.5%</span>
+                            <span class="detail-value">Candidato para representar la cámara de Antioquia</span>
                         </div>
                     </div>
                 </div>
@@ -129,18 +113,6 @@
                             <circle cx="9" cy="7" r="4"></circle>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                    </div>
-                    <div class="metric-value">—</div>
-                </div>
-
-                <div class="metric-card glass" data-card-id="card-posts-analizados">
-                    <div class="metric-header">
-                        <span class="metric-label">Posts analizados</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                            <line x1="9" y1="21" x2="9" y2="9"></line>
                         </svg>
                     </div>
                     <div class="metric-value">—</div>
@@ -503,6 +475,7 @@
                         </div>
                         <div class="chart-filter-stats" id="chartComentadoresRedStats"></div>
                         <div class="chart-download-buttons" id="chartComentadoresRedDownloads" style="display:none;">
+                            <button type="button" class="btn btn-download-comments-red" title="Descargar comentarios del filtro actual (con columna Sentimiento)">Comentarios CSV</button>
                             <button type="button" class="btn btn-download-followers-red">Followers CSV</button>
                             <button type="button" class="btn btn-download-no-followers-red">No followers CSV</button>
                         </div>
@@ -628,19 +601,6 @@
                     </div>
                 </div>
             </div><!-- /hashtags -->
-
-            <!-- Vista Comment analysis -->
-            <div class="dashboard-view" data-view="comments-analysis" style="display:none;">
-                <div class="chart-card glass" style="grid-column: 1 / -1;">
-                    <div class="chart-header">
-                        <h3>Comment analysis</h3>
-                        <p class="chart-subtitle">Análisis de sentimiento y engagement de los comentarios en posts virales.</p>
-                    </div>
-                    <div class="chart-canvas-wrap" style="min-height:300px;padding:2rem;">
-                        <p style="color:rgba(255,255,255,0.8);">Contenido del análisis de comentarios (próximamente).</p>
-                    </div>
-                </div>
-            </div><!-- /Comment analysis -->
 
             <!-- Vista Capas -->
             <div class="dashboard-view" data-view="capas" style="display:none;">

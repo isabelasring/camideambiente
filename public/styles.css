@@ -20,6 +20,13 @@
     --geodatos-map-height-active-tablet: clamp(190px, 25dvh, 260px);
     --geodatos-map-height-mobile: clamp(180px, 24dvh, 230px);
     --geodatos-map-height-active-mobile: clamp(170px, 22dvh, 220px);
+    /* Paleta gráficas: rojo, morado, azul */
+    --chart-red: #dc2626;
+    --chart-red-light: #f87171;
+    --chart-purple: #7c3aed;
+    --chart-purple-light: #a78bfa;
+    --chart-blue: #2563eb;
+    --chart-blue-light: #60a5fa;
 }
 
 body {
@@ -321,6 +328,13 @@ body {
     color: white;
     font-weight: 600;
     font-size: 1.1rem;
+    overflow: hidden;
+}
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .user-info {
@@ -1646,6 +1660,26 @@ body {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Botones de filtro sentimiento (gráficas individuales y general) */
+.btn-sentiment-filter-post,
+.btn-sentiment-filter {
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.btn-sentiment-filter-post:hover,
+.btn-sentiment-filter:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+.btn-sentiment-filter-post.active,
+.btn-sentiment-filter.active {
+    background: rgba(128, 128, 128, 0.5);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
 .posts-list {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1881,6 +1915,13 @@ body {
     color: white;
     font-weight: 700;
     font-size: 1.8rem;
+    overflow: hidden;
+}
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .profile-info h3 {
@@ -1923,6 +1964,7 @@ body {
     color: white;
     font-weight: 600;
     font-size: 0.95rem;
+    margin-left: 0.5rem;
 }
 
 .detail-value.highlight {
@@ -2124,6 +2166,67 @@ body {
 }
 .post-item-wrapper-expanded .post-item-expand .posts-expand-subtitle {
     color: #374151 !important;
+}
+/* Botones en zona fondo blanco (gráfica individual): fondo blanco, borde paleta, hover = color borde */
+.post-item-wrapper-expanded .post-item-expand .btn,
+.post-item-wrapper-expanded .post-item-expand .btn-small {
+    background: #fff !important;
+    color: #1f2937;
+    border: 2px solid #9ca3af;
+}
+.post-item-wrapper-expanded .post-item-expand .btn:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-small:hover {
+    color: #fff !important;
+}
+/* Sentimiento: Todos = gris */
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="all"] {
+    border-color: #9ca3af;
+}
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="all"]:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="all"].active {
+    background: #9ca3af !important;
+    border-color: #9ca3af;
+}
+/* Sentimiento: Positivo = azul */
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="POSITIVO"] {
+    border-color: #2563eb;
+}
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="POSITIVO"]:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="POSITIVO"].active {
+    background: #2563eb !important;
+    border-color: #2563eb;
+}
+/* Sentimiento: Negativo = rojo */
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="NEGATIVO"] {
+    border-color: #dc2626;
+}
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="NEGATIVO"]:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="NEGATIVO"].active {
+    background: #dc2626 !important;
+    border-color: #dc2626;
+}
+/* Sentimiento: Neutro = morado */
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="NEUTRO"] {
+    border-color: #7c3aed;
+}
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="NEUTRO"]:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-sentiment-filter-post[data-sentiment="NEUTRO"].active {
+    background: #7c3aed !important;
+    border-color: #7c3aed;
+}
+/* Descargar / Ver post = gris */
+.post-item-wrapper-expanded .post-item-expand .btn-download-comments-post,
+.post-item-wrapper-expanded .post-item-expand .btn-download-followers,
+.post-item-wrapper-expanded .post-item-expand .btn-download-no-followers,
+.post-item-wrapper-expanded .post-item-expand .btn-ver-post {
+    border-color: #9ca3af;
+}
+.post-item-wrapper-expanded .post-item-expand .btn-download-comments-post:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-download-followers:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-download-no-followers:hover,
+.post-item-wrapper-expanded .post-item-expand .btn-ver-post:hover {
+    background: #9ca3af !important;
+    border-color: #9ca3af;
 }
 .post-item-wrapper-expanded .post-expand-buttons .btn {
     color: #1f2937;

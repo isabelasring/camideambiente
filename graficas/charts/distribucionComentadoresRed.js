@@ -30,6 +30,34 @@
     return '\uFEFF' + header + '\r\n' + rows.join('\r\n');
   }
 
+  function toCSVCommentsRed(data) {
+    const esc = v => {
+      const s = String(v ?? '').replace(/"/g, '""');
+      return /[,"\n\r]/.test(s) ? '"' + s + '"' : s;
+    };
+    const header = 'Usuario,Nombre,Seguidores,Seguidos,Sigue a Camilo,Comentario,Sentimiento';
+    const rows = [];
+    (data || []).forEach((d) => {
+      const items = (d.commentsWithSentiment && d.commentsWithSentiment.length)
+        ? d.commentsWithSentiment
+        : (d.commentsTexts || []).map(t => ({ text: t, sentiment: '' }));
+      items.forEach((c) => {
+        const text = typeof c === 'object' && c != null ? c.text : c;
+        const sent = (typeof c === 'object' && c != null ? (c.sentiment || '') : '') || '';
+        rows.push([
+          esc(d.username),
+          esc(d.fullName),
+          d.followersCount ?? '',
+          d.followsCount ?? '',
+          d.followsCamilo ? 'Sí' : 'No',
+          esc(text),
+          sent || '—'
+        ].join(','));
+      });
+    });
+    return '\uFEFF' + header + '\r\n' + rows.join('\r\n');
+  }
+
   function downloadCSV(content, filename) {
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
@@ -189,8 +217,8 @@
         });
 
         const traces = [
-          trace(sigue, 'Sigue a Camilo', '#22c55e'),
-          trace(noSigue, 'No sigue a Camilo', '#f97316')
+          trace(sigue, 'Sigue a Camilo', '#dc2626'),
+          trace(noSigue, 'No sigue a Camilo', '#2563eb')
         ].filter(t => t.x.length > 0);
 
         const layout = {
@@ -316,6 +344,11 @@
         const data = downloadsEl._comentadoresData || [];
         const filtered = data.filter(d => !d.followsCamilo);
         downloadCSV(toCSVRed(filtered), 'comentadores_no_followers.csv');
+      });
+      downloadsEl.querySelector('.btn-download-comments-red')?.addEventListener('click', () => {
+        const data = downloadsEl._comentadoresData || [];
+        const suf = sentimentFilter === 'all' ? '' : '_' + sentimentFilter.toLowerCase();
+        downloadCSV(toCSVCommentsRed(data), 'comentadores_comentarios' + suf + '.csv');
       });
     }
     load();
