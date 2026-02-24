@@ -873,17 +873,35 @@ router.get('/top-perfiles-potenciales', (req, res) => {
 /**
  * GET /api/metrics/top-perfiles-comentadores
  * Top 10 usuarios que más comentaron, con seguidores y comentarios.
- * Fuente: commentsPopularPosts.csv (conteo) + profileUsersComments.json (seguidores)
+ * Query: follows=all|yes|no (all=general, yes=siguen a Camilo, no=no siguen)
+ * Fuente: commentsPopularPosts.csv (conteo) + profileUsersComments.json (seguidores) + seguidoresCamilo.csv
  */
 router.get('/top-perfiles-comentadores', (req, res) => {
   try {
+    const followsFilter = (req.query.follows || 'all').toLowerCase();
+    if (!['all', 'yes', 'no'].includes(followsFilter)) {
+      return res.status(400).json({ error: 'follows debe ser all, yes o no' });
+    }
+
     const commentsPath = path.join(CSVJSON_PATH, 'commentsPopularPosts.csv');
     const profilePath = path.join(CSVJSON_PATH, 'profileUsersComments.json');
+    const seguidoresPath = path.join(CSVJSON_PATH, 'seguidoresCamilo.csv');
     if (!fs.existsSync(commentsPath)) {
       return res.status(404).json({ error: 'commentsPopularPosts no encontrado' });
     }
     if (!fs.existsSync(profilePath)) {
       return res.status(404).json({ error: 'profileUsersComments no encontrado' });
+    }
+
+    let sigueSet = new Set();
+    if (followsFilter !== 'all' && fs.existsSync(seguidoresPath)) {
+      const segRows = parseCSV(fs.readFileSync(seguidoresPath, 'utf8'));
+      const segHeaders = segRows[0]?.map(h => (h || '').toLowerCase().trim()) || [];
+      const iUser = segHeaders.indexOf('username');
+      for (let i = 1; i < segRows.length; i++) {
+        const u = (segRows[i][iUser] || '').trim().toLowerCase();
+        if (u) sigueSet.add(u);
+      }
     }
 
     const norm = (u) => (u || '').trim().replace(/\/$/, '');
@@ -914,20 +932,25 @@ router.get('/top-perfiles-comentadores', (req, res) => {
       if (u) profileMap[u] = p;
     }
 
-    const list = Object.entries(byUser)
+    let list = Object.entries(byUser)
       .map(([username, info]) => {
         const prof = profileMap[(username || '').toLowerCase()];
         const followersCount = prof ? (parseInt(prof.followersCount, 10) || 0) : 0;
+        const followsCamilo = sigueSet.size ? sigueSet.has((username || '').toLowerCase()) : null;
         return {
           username: username.trim(),
           fullName: (prof?.fullName || '').trim() || username || '—',
           commentCount: info.count,
           postsCommented: info.postUrls.size,
-          followersCount
+          followersCount,
+          followsCamilo
         };
-      })
-      .sort((a, b) => b.commentCount - a.commentCount)
-      .slice(0, 10);
+      });
+
+    if (followsFilter === 'yes') list = list.filter((p) => p.followsCamilo === true);
+    if (followsFilter === 'no') list = list.filter((p) => p.followsCamilo === false);
+
+    list = list.sort((a, b) => b.commentCount - a.commentCount).slice(0, 10);
     return res.json({ data: list });
   } catch (err) {
     console.error('Error top-perfiles-comentadores:', err);

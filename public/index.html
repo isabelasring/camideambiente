@@ -479,10 +479,16 @@
                     </div>
                 </div>
 
-                <!-- Top 6 perfiles (sesgo 200-4000) - usuarios que comentaron -->
+                <!-- Top perfiles (usuarios que comentaron): General / Siguen a Camilo / No siguen -->
                 <div class="top-profiles-section glass" style="margin-top: 2rem;">
                     <h3 class="top-profiles-title">Top profiles (usuarios que comentaron)</h3>
                     <p class="top-profiles-subtitle">Top 10 usuarios que más comentaron en posts virales (seguidores y comentarios):</p>
+                    <div class="top-comentadores-tabs" style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+                        <button type="button" class="btn btn-top-comentadores-tab active" data-follows="all">General</button>
+                        <button type="button" class="btn btn-top-comentadores-tab" data-follows="yes">Siguen a Camilo</button>
+                        <button type="button" class="btn btn-top-comentadores-tab" data-follows="no">No siguen a Camilo</button>
+                        <button type="button" class="btn btn-small" id="topComentadoresDownloadCsv" title="Descargar el listado actual en CSV">Descargar CSV</button>
+                    </div>
                     <div class="chart-canvas-wrap top-profiles-chart-wrap">
                         <div id="chartTopProfilesComentadores"></div>
                     </div>

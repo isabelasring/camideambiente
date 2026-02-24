@@ -752,6 +752,25 @@ body {
   border-color: rgba(255,255,255,0.4);
 }
 
+.btn-top-comentadores-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+}
+.btn-top-comentadores-tab:hover {
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+.btn-top-comentadores-tab.active {
+  background: var(--white-hover, rgba(255,255,255,0.25));
+  color: white;
+  border-color: rgba(255,255,255,0.4);
+}
+
 /* Top profiles */
 .top-profiles-section {
     padding: 2rem;
